@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kangaroo | Revenue Command Centre</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --kng-red:            #E8281E;
+  --kng-red-muted:      #E8281E22;
+  --kng-bg-dark:        #0D0D0D;
+  --kng-bg-dark2:       #1A1A1A;
+  --kng-bg-hero:        #2a0a0a;
+  --kng-bg-light:       #F5F3F0;
+  --kng-bg-white:       #FFFFFF;
+  --kng-text-primary:   #FFFFFF;
+  --kng-text-secondary: #B0B0B0;
+  --kng-text-dark:      #0D0D0D;
+  --kng-positive:       #1D9E75;
+  --kng-negative:       #E8281E;
+  --kng-neutral:        #888888;
+  --kng-border:         rgba(255,255,255,0.08);
+  --kng-border-lt:      rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--kng-bg-dark);color:var(--kng-text-primary);font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
+
+/* ── HEADER ── */
+.cmd-header{
+  background:var(--kng-bg-dark);
+  border-bottom:1px solid var(--kng-border);
+  padding:14px 24px;
+  position:sticky;top:0;z-index:100;
+}
+.header-top{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.logo{font-size:1.4rem;font-weight:900;color:var(--kng-red);letter-spacing:1px}
+.tagline{font-size:.7rem;color:var(--kng-text-secondary);margin-top:2px}
+.filter-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.filter-bar select{
+  background:var(--kng-bg-dark2);
+  border:1px solid var(--kng-border);
+  color:var(--kng-text-primary);
+  padding:6px 12px;border-radius:6px;font-size:.8rem;cursor:pointer;
+}
+.filter-bar select:focus{outline:none;border-color:var(--kng-red)}
+.filter-bar button{
+  background:var(--kng-red);color:#fff;
+  border:none;padding:6px 14px;border-radius:6px;
+  font-size:.8rem;font-weight:700;cursor:pointer;transition:.2s;
+}
+.filter-bar button:hover{opacity:.85}
+.range-group{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--kng-text-secondary)}
+
+/* ── MAIN ── */
+main{padding:20px 24px;max-width:1600px;margin:0 auto}
+
+/* ── KPI ROW ── */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+.kpi-card{
+  background:var(--kng-bg-dark2);
+  border:1px solid var(--kng-border);
+  border-radius:10px;padding:16px;position:relative;overflow:hidden;
+}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-card.c-red::before{background:var(--kng-red)}
+.kpi-card.c-green::before{background:var(--kng-positive)}
+.kpi-card.c-neutral::before{background:var(--kng-neutral)}
+.kpi-label{font-size:.68rem;color:var(--kng-text-secondary);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.kpi-val{font-size:1.45rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--kng-text-primary);line-height:1}
+.kpi-trend{font-size:.78rem;margin-top:6px;font-weight:600}
+.kpi-trend.up{color:var(--kng-positive)}
+.kpi-trend.down{color:var(--kng-negative)}
+.kpi-trend.flat{color:var(--kng-neutral)}
+.kpi-insight{font-size:.63rem;color:var(--kng-text-secondary);margin-top:6px;line-height:1.4}
+
+/* ── INSIGHT CARDS ── */
+.insight-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.insight-card{
+  background:var(--kng-bg-dark2);
+  border:1px solid var(--kng-border);
+  border-radius:10px;padding:14px;
+}
+.insight-icon{font-size:1.1rem;margin-bottom:6px}
+.insight-title{font-size:.65rem;color:var(--kng-text-secondary);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.insight-body{font-size:.78rem;color:var(--kng-text-primary);line-height:1.5}
+.insight-body .hi{color:var(--kng-positive);font-weight:700}
+.insight-body .warn{color:var(--kng-negative);font-weight:700}
+
+/* ── SECTION LABEL ── */
+.section-label{
+  font-size:.62rem;color:var(--kng-text-secondary);
+  text-transform:uppercase;letter-spacing:1.2px;
+  margin-bottom:8px;padding-left:2px;
+  border-left:3px solid var(--kng-red);padding-left:8px;
+}
+
+/* ── CHART GRIDS ── */
+.chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-grid-1{margin-bottom:16px}
+
+/* ── CHART CARDS ── */
+.chart-card{
+  background:var(--kng-bg-dark2);
+  border:1px solid var(--kng-border);
+  border-radius:10px;padding:20px;
+}
+.chart-title{font-size:.85rem;font-weight:700;color:var(--kng-text-primary);margin-bottom:2px}
+.chart-subtitle{font-size:.67rem;color:var(--kng-text-secondary);margin-bottom:12px;line-height:1.4}
+.chart-wrap{position:relative}
+
+/* ── HEATMAP ── */
+.heatmap-table{width:100%;border-collapse:separate;border-spacing:4px;font-size:.78rem}
+.heatmap-table th{color:var(--kng-text-secondary);font-weight:600;padding:6px 10px;text-align:center}
+.heatmap-table td{border-radius:6px;padding:10px;text-align:center;font-variant-numeric:tabular-nums;font-weight:700;cursor:default;transition:.2s}
+
+/* ── LEAGUE TABLE ── */
+.league-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--kng-border)}
+.league-rank{color:var(--kng-text-secondary);width:22px;text-align:right;font-size:.7rem}
+.league-label{flex:1;color:var(--kng-text-primary);font-size:.78rem}
+.league-bar-wrap{width:220px;background:rgba(255,255,255,0.06);border-radius:4px;height:10px;overflow:hidden}
+.league-bar{height:100%;border-radius:4px;background:var(--kng-red);transition:width .3s ease}
+.league-val{width:90px;text-align:right;font-variant-numeric:tabular-nums;color:var(--kng-positive);font-weight:700;font-size:.78rem}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){.kpi-row{grid-template-columns:repeat(3,1fr)}.chart-grid-3{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.kpi-row{grid-template-columns:1fr 1fr}.chart-grid-2,.chart-grid-3{grid-template-columns:1fr}.insight-row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- SECTION 1: COMMAND HEADER -->
+<header class="cmd-header">
+  <div class="header-top">
+    <div>
+      <div class="logo">🦘 KANGAROO</div>
+      <div class="tagline">Revenue Command Centre &nbsp;·&nbsp; Where every dollar tells a story</div>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <div class="range-group">
+      <span>From</span>
+      <select id="f-from"></select>
+      <span>To</span>
+      <select id="f-to"></select>
+    </div>
+    <select id="f-bu"><option value="">All Business Units</option><option>North America</option><option>Europe</option><option>APAC</option></select>
+    <select id="f-product"><option value="">All Products</option><option>Product A</option><option>Product B</option><option>Product C</option></select>
+    <select id="f-segment"><option value="">All Segments</option><option>Enterprise</option><option>Mid-Market</option><option>SMB</option></select>
+    <select id="f-revtype"><option value="">All Revenue Types</option><option>New</option><option>Renewal</option><option>Expansion</option></select>
+    <button onclick="resetFilters()">↺ Reset All Filters</button>
+  </div>
+</header>
+
+<main>
+  <!-- SECTION 2: KPI PULSE ROW -->
+  <div class="kpi-row">
+    <div class="kpi-card c-green"><div class="kpi-label">Total Net Revenue</div><div class="kpi-val" id="kpi-net">—</div><div class="kpi-trend" id="kpi-net-trend"></div><div class="kpi-insight">Primary performance KPI — the money that actually counts</div></div>
+    <div class="kpi-card c-green"><div class="kpi-label">Total Gross Revenue</div><div class="kpi-val" id="kpi-gross">—</div><div class="kpi-trend" id="kpi-gross-trend"></div><div class="kpi-insight">Before discounts — reveals true commercial scale</div></div>
+    <div class="kpi-card c-neutral"><div class="kpi-label">Avg Discount %</div><div class="kpi-val" id="kpi-disc">—</div><div class="kpi-trend" id="kpi-disc-trend"></div><div class="kpi-insight">High discounts erode margin — watch for drift</div></div>
+    <div class="kpi-card c-green"><div class="kpi-label">Total ARR</div><div class="kpi-val" id="kpi-arr">—</div><div class="kpi-trend" id="kpi-arr-trend"></div><div class="kpi-insight">ARR signals annualised health — watch for momentum shifts</div></div>
+    <div class="kpi-card c-neutral"><div class="kpi-label">Total Units Sold</div><div class="kpi-val" id="kpi-units">—</div><div class="kpi-trend" id="kpi-units-trend"></div><div class="kpi-insight">Volume driver — track alongside price for yield signal</div></div>
+    <div class="kpi-card c-red"><div class="kpi-label">Net Rev vs Prior Period</div><div class="kpi-val" id="kpi-chg">—</div><div class="kpi-trend" id="kpi-chg-trend"></div><div class="kpi-insight">The most honest number: are we growing?</div></div>
+  </div>
+
+  <!-- SECTION 9: INSIGHT PANEL -->
+  <div class="insight-row">
+    <div class="insight-card"><div class="insight-icon">🏆</div><div class="insight-title">Top Business Unit</div><div class="insight-body" id="ins-top-bu">—</div></div>
+    <div class="insight-card"><div class="insight-icon">⚠️</div><div class="insight-title">Discount Risk</div><div class="insight-body" id="ins-disc">—</div></div>
+    <div class="insight-card"><div class="insight-icon">🔄</div><div class="insight-title">Renewal Health</div><div class="insight-body" id="ins-renewal">—</div></div>
+    <div class="insight-card"><div class="insight-icon">🚀</div><div class="insight-title">Fastest Growing Segment</div><div class="insight-body" id="ins-seg">—</div></div>
+    <div class="insight-card"><div class="insight-icon">📈</div><div class="insight-title">ARR Momentum</div><div class="insight-body" id="ins-arr">—</div></div>
+  </div>
+
+  <!-- SECTION 3: PRIMARY STORY -->
+  <div class="section-label">Primary Revenue Story</div>
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-title">Is the business accelerating or losing steam?</div>
+      <div class="chart-subtitle">Monthly Net Revenue Trend — 3-month rolling avg overlaid · Heartbeat of the business</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c-trend"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Which region is carrying the weight?</div>
+      <div class="chart-subtitle">Net Revenue by Business Unit — stacked by month · Regional momentum at a glance</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c-bu"></canvas></div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: COMPOSITION -->
+  <div class="section-label">Revenue Composition</div>
+  <div class="chart-grid-3">
+    <div class="chart-card">
+      <div class="chart-title">Which product owns the mix?</div>
+      <div class="chart-subtitle">Net Revenue by Product — dominance reveals portfolio risk</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c-product"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Who is paying the most?</div>
+      <div class="chart-subtitle">Net Revenue by Customer Segment — sorted descending</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c-segment"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Are we winning new or renewing well?</div>
+      <div class="chart-subtitle">Revenue Type Mix — Renewal % is the retention health signal</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c-revtype"></canvas></div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: PRICING -->
+  <div class="section-label">Pricing & Discount Intelligence</div>
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-title">Who is giving too much away?</div>
+      <div class="chart-subtitle">Avg Discount % by Business Unit — red line = company average · Above = margin risk</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-disc"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Volume vs Value: where is the sweet spot?</div>
+      <div class="chart-subtitle">Price per Unit vs Units Sold — coloured by Product · Hover for full context</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-scatter"></canvas></div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: RECURRING -->
+  <div class="section-label">Revenue Quality & Recurring Revenue</div>
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-title">Is recurring revenue building or contracting?</div>
+      <div class="chart-subtitle">ARR Trend (area) vs MRR×12 (line) — gap = deferred revenue effect</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-arr"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Are we earning or burning backlog?</div>
+      <div class="chart-subtitle">Deferred Revenue Change — Positive = backlog building · Negative = recognition exceeding billings</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-deferred"></canvas></div>
+    </div>
+  </div>
+
+  <!-- SECTION 7: HEATMAP -->
+  <div class="section-label">Opportunity Matrix</div>
+  <div class="chart-card chart-grid-1">
+    <div class="chart-title">Where is the whitespace — and where are we leaving money?</div>
+    <div class="chart-subtitle">Net Revenue Heatmap: Segment × Product — deep red = highest concentration · pale = untapped potential</div>
+    <div id="heatmap-wrap" style="overflow-x:auto;margin-top:8px"></div>
+  </div>
+
+  <!-- SECTION 8: LEAGUE TABLE -->
+  <div class="section-label">Performance League Table</div>
+  <div class="chart-card chart-grid-1">
+    <div class="chart-title">Top 10 Revenue Combinations — Month · BU · Product</div>
+    <div class="chart-subtitle">Ranked by Net Revenue — the elite performers driving disproportionate value</div>
+    <div id="league-wrap" style="margin-top:12px"></div>
+  </div>
+</main>
+
+<script>
+// ============================================================
+// RAW DATA — 216 rows
+// ============================================================
+const KANGAROO_DATA = [
+  {Month:"2024-01",BU:"North America",Product:"Product A",RevType:"New",Segment:"Enterprise",Units:120,PPU:850,GrossRev:102000,Disc:5,NetRev:96900,DeferredChg:4200,RecogRev:101100,ARR:1162800,MRR:96900},
+  {Month:"2024-02",BU:"North America",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:115,PPU:860,GrossRev:98900,Disc:4,NetRev:94944,DeferredChg:3100,RecogRev:98044,ARR:1139328,MRR:94944},
+  {Month:"2024-03",BU:"North America",Product:"Product A",RevType:"Expansion",Segment:"Mid-Market",Units:95,PPU:820,GrossRev:77900,Disc:6,NetRev:73226,DeferredChg:2800,RecogRev:76026,ARR:878712,MRR:73226},
+  {Month:"2024-04",BU:"North America",Product:"Product A",RevType:"New",Segment:"SMB",Units:80,PPU:780,GrossRev:62400,Disc:8,NetRev:57408,DeferredChg:-1200,RecogRev:56208,ARR:688896,MRR:57408},
+  {Month:"2024-05",BU:"North America",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:130,PPU:870,GrossRev:113100,Disc:4,NetRev:108576,DeferredChg:5200,RecogRev:113776,ARR:1302912,MRR:108576},
+  {Month:"2024-06",BU:"North America",Product:"Product A",RevType:"Expansion",Segment:"Mid-Market",Units:110,PPU:840,GrossRev:92400,Disc:5,NetRev:87780,DeferredChg:3600,RecogRev:91380,ARR:1053360,MRR:87780},
+  {Month:"2024-07",BU:"North America",Product:"Product A",RevType:"New",Segment:"Enterprise",Units:140,PPU:890,GrossRev:124600,Disc:3,NetRev:120862,DeferredChg:6100,RecogRev:126962,ARR:1450344,MRR:120862},
+  {Month:"2024-08",BU:"North America",Product:"Product A",RevType:"Renewal",Segment:"SMB",Units:75,PPU:760,GrossRev:57000,Disc:9,NetRev:51870,DeferredChg:-2100,RecogRev:49770,ARR:622440,MRR:51870},
+  {Month:"2024-09",BU:"North America",Product:"Product A",RevType:"Expansion",Segment:"Enterprise",Units:125,PPU:860,GrossRev:107500,Disc:5,NetRev:102125,DeferredChg:4500,RecogRev:106625,ARR:1225500,MRR:102125},
+  {Month:"2024-10",BU:"North America",Product:"Product A",RevType:"New",Segment:"Mid-Market",Units:100,PPU:810,GrossRev:81000,Disc:7,NetRev:75330,DeferredChg:2200,RecogRev:77530,ARR:903960,MRR:75330},
+  {Month:"2024-11",BU:"North America",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:135,PPU:880,GrossRev:118800,Disc:4,NetRev:114048,DeferredChg:5600,RecogRev:119648,ARR:1368576,MRR:114048},
+  {Month:"2024-12",BU:"North America",Product:"Product A",RevType:"Expansion",Segment:"SMB",Units:90,PPU:790,GrossRev:71100,Disc:7,NetRev:66123,DeferredChg:1800,RecogRev:67923,ARR:793476,MRR:66123},
+  {Month:"2025-01",BU:"North America",Product:"Product A",RevType:"New",Segment:"Enterprise",Units:145,PPU:900,GrossRev:130500,Disc:3,NetRev:126585,DeferredChg:7200,RecogRev:133785,ARR:1519020,MRR:126585},
+  {Month:"2025-02",BU:"North America",Product:"Product A",RevType:"Renewal",Segment:"Mid-Market",Units:105,PPU:825,GrossRev:86625,Disc:5,NetRev:82294,DeferredChg:3400,RecogRev:85694,ARR:987528,MRR:82294},
+  {Month:"2025-03",BU:"North America",Product:"Product A",RevType:"Expansion",Segment:"Enterprise",Units:130,PPU:875,GrossRev:113750,Disc:4,NetRev:109200,DeferredChg:5100,RecogRev:114300,ARR:1310400,MRR:109200},
+  {Month:"2025-04",BU:"North America",Product:"Product A",RevType:"New",Segment:"SMB",Units:85,PPU:795,GrossRev:67575,Disc:8,NetRev:62169,DeferredChg:-900,RecogRev:61269,ARR:746028,MRR:62169},
+  {Month:"2025-05",BU:"North America",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:150,PPU:910,GrossRev:136500,Disc:3,NetRev:132405,DeferredChg:7800,RecogRev:140205,ARR:1588860,MRR:132405},
+  {Month:"2025-06",BU:"North America",Product:"Product A",RevType:"Expansion",Segment:"Mid-Market",Units:120,PPU:850,GrossRev:102000,Disc:5,NetRev:96900,DeferredChg:4400,RecogRev:101300,ARR:1162800,MRR:96900},
+  {Month:"2025-07",BU:"North America",Product:"Product A",RevType:"New",Segment:"Enterprise",Units:155,PPU:920,GrossRev:142600,Disc:3,NetRev:138322,DeferredChg:8100,RecogRev:146422,ARR:1659864,MRR:138322},
+  {Month:"2025-08",BU:"North America",Product:"Product A",RevType:"Renewal",Segment:"SMB",Units:80,PPU:775,GrossRev:62000,Disc:8,NetRev:57040,DeferredChg:-1800,RecogRev:55240,ARR:684480,MRR:57040},
+  {Month:"2025-09",BU:"North America",Product:"Product A",RevType:"Expansion",Segment:"Enterprise",Units:140,PPU:895,GrossRev:125300,Disc:4,NetRev:120288,DeferredChg:5800,RecogRev:126088,ARR:1443456,MRR:120288},
+  {Month:"2025-10",BU:"North America",Product:"Product A",RevType:"New",Segment:"Mid-Market",Units:110,PPU:830,GrossRev:91300,Disc:6,NetRev:85822,DeferredChg:3200,RecogRev:89022,ARR:1029864,MRR:85822},
+  {Month:"2025-11",BU:"North America",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:148,PPU:905,GrossRev:133940,Disc:3,NetRev:129922,DeferredChg:7100,RecogRev:137022,ARR:1559064,MRR:129922},
+  {Month:"2025-12",BU:"North America",Product:"Product A",RevType:"Expansion",Segment:"SMB",Units:95,PPU:800,GrossRev:76000,Disc:7,NetRev:70680,DeferredChg:2500,RecogRev:73180,ARR:848160,MRR:70680},
+  {Month:"2024-01",BU:"North America",Product:"Product B",RevType:"Renewal",Segment:"Mid-Market",Units:60,PPU:1100,GrossRev:66000,Disc:6,NetRev:62040,DeferredChg:2600,RecogRev:64640,ARR:744480,MRR:62040},
+  {Month:"2024-02",BU:"North America",Product:"Product B",RevType:"New",Segment:"SMB",Units:45,PPU:1050,GrossRev:47250,Disc:10,NetRev:42525,DeferredChg:-1800,RecogRev:40725,ARR:510300,MRR:42525},
+  {Month:"2024-03",BU:"North America",Product:"Product B",RevType:"Expansion",Segment:"Enterprise",Units:75,PPU:1150,GrossRev:86250,Disc:5,NetRev:81938,DeferredChg:3800,RecogRev:85738,ARR:983256,MRR:81938},
+  {Month:"2024-04",BU:"North America",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:80,PPU:1200,GrossRev:96000,Disc:4,NetRev:92160,DeferredChg:4000,RecogRev:96160,ARR:1105920,MRR:92160},
+  {Month:"2024-05",BU:"North America",Product:"Product B",RevType:"New",Segment:"Mid-Market",Units:55,PPU:1080,GrossRev:59400,Disc:7,NetRev:55242,DeferredChg:2100,RecogRev:57342,ARR:662904,MRR:55242},
+  {Month:"2024-06",BU:"North America",Product:"Product B",RevType:"Expansion",Segment:"SMB",Units:40,PPU:1020,GrossRev:40800,Disc:11,NetRev:36312,DeferredChg:-1500,RecogRev:34812,ARR:435744,MRR:36312},
+  {Month:"2024-07",BU:"North America",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:85,PPU:1250,GrossRev:106250,Disc:4,NetRev:102000,DeferredChg:4800,RecogRev:106800,ARR:1224000,MRR:102000},
+  {Month:"2024-08",BU:"North America",Product:"Product B",RevType:"New",Segment:"Mid-Market",Units:50,PPU:1060,GrossRev:53000,Disc:8,NetRev:48760,DeferredChg:1900,RecogRev:50660,ARR:585120,MRR:48760},
+  {Month:"2024-09",BU:"North America",Product:"Product B",RevType:"Expansion",Segment:"Enterprise",Units:90,PPU:1280,GrossRev:115200,Disc:5,NetRev:109440,DeferredChg:5200,RecogRev:114640,ARR:1313280,MRR:109440},
+  {Month:"2024-10",BU:"North America",Product:"Product B",RevType:"Renewal",Segment:"SMB",Units:35,PPU:1000,GrossRev:35000,Disc:12,NetRev:30800,DeferredChg:-2200,RecogRev:28600,ARR:369600,MRR:30800},
+  {Month:"2024-11",BU:"North America",Product:"Product B",RevType:"New",Segment:"Enterprise",Units:95,PPU:1300,GrossRev:123500,Disc:4,NetRev:118560,DeferredChg:5800,RecogRev:124360,ARR:1422720,MRR:118560},
+  {Month:"2024-12",BU:"North America",Product:"Product B",RevType:"Expansion",Segment:"Mid-Market",Units:65,PPU:1100,GrossRev:71500,Disc:6,NetRev:67210,DeferredChg:3100,RecogRev:70310,ARR:806520,MRR:67210},
+  {Month:"2025-01",BU:"North America",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:100,PPU:1350,GrossRev:135000,Disc:4,NetRev:129600,DeferredChg:6500,RecogRev:136100,ARR:1555200,MRR:129600},
+  {Month:"2025-02",BU:"North America",Product:"Product B",RevType:"New",Segment:"Mid-Market",Units:60,PPU:1120,GrossRev:67200,Disc:7,NetRev:62496,DeferredChg:2800,RecogRev:65296,ARR:749952,MRR:62496},
+  {Month:"2025-03",BU:"North America",Product:"Product B",RevType:"Expansion",Segment:"SMB",Units:42,PPU:1030,GrossRev:43260,Disc:10,NetRev:38934,DeferredChg:-1600,RecogRev:37334,ARR:467208,MRR:38934},
+  {Month:"2025-04",BU:"North America",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:105,PPU:1380,GrossRev:144900,Disc:4,NetRev:139104,DeferredChg:7200,RecogRev:146304,ARR:1669248,MRR:139104},
+  {Month:"2025-05",BU:"North America",Product:"Product B",RevType:"New",Segment:"Mid-Market",Units:58,PPU:1090,GrossRev:63220,Disc:7,NetRev:58795,DeferredChg:2400,RecogRev:61195,ARR:705540,MRR:58795},
+  {Month:"2025-06",BU:"North America",Product:"Product B",RevType:"Expansion",Segment:"Enterprise",Units:95,PPU:1320,GrossRev:125400,Disc:5,NetRev:119130,DeferredChg:5900,RecogRev:125030,ARR:1429560,MRR:119130},
+  {Month:"2025-07",BU:"North America",Product:"Product B",RevType:"Renewal",Segment:"SMB",Units:38,PPU:1010,GrossRev:38380,Disc:11,NetRev:34158,DeferredChg:-2000,RecogRev:32158,ARR:409896,MRR:34158},
+  {Month:"2025-08",BU:"North America",Product:"Product B",RevType:"New",Segment:"Enterprise",Units:110,PPU:1400,GrossRev:154000,Disc:3,NetRev:149380,DeferredChg:8500,RecogRev:157880,ARR:1792560,MRR:149380},
+  {Month:"2025-09",BU:"North America",Product:"Product B",RevType:"Expansion",Segment:"Mid-Market",Units:68,PPU:1130,GrossRev:76840,Disc:6,NetRev:72230,DeferredChg:3400,RecogRev:75630,ARR:866760,MRR:72230},
+  {Month:"2025-10",BU:"North America",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:112,PPU:1420,GrossRev:159040,Disc:4,NetRev:152678,DeferredChg:8000,RecogRev:160678,ARR:1832136,MRR:152678},
+  {Month:"2025-11",BU:"North America",Product:"Product B",RevType:"New",Segment:"Mid-Market",Units:62,PPU:1110,GrossRev:68820,Disc:7,NetRev:63983,DeferredChg:2900,RecogRev:66883,ARR:767796,MRR:63983},
+  {Month:"2025-12",BU:"North America",Product:"Product B",RevType:"Expansion",Segment:"SMB",Units:44,PPU:1040,GrossRev:45760,Disc:10,NetRev:41184,DeferredChg:-1400,RecogRev:39784,ARR:494208,MRR:41184},
+  {Month:"2024-01",BU:"North America",Product:"Product C",RevType:"Expansion",Segment:"SMB",Units:30,PPU:500,GrossRev:15000,Disc:12,NetRev:13200,DeferredChg:-800,RecogRev:12400,ARR:158400,MRR:13200},
+  {Month:"2024-02",BU:"North America",Product:"Product C",RevType:"Renewal",Segment:"Enterprise",Units:55,PPU:620,GrossRev:34100,Disc:6,NetRev:32054,DeferredChg:1400,RecogRev:33454,ARR:384648,MRR:32054},
+  {Month:"2024-03",BU:"North America",Product:"Product C",RevType:"New",Segment:"Mid-Market",Units:40,PPU:560,GrossRev:22400,Disc:8,NetRev:20608,DeferredChg:800,RecogRev:21408,ARR:247296,MRR:20608},
+  {Month:"2024-04",BU:"North America",Product:"Product C",RevType:"Expansion",Segment:"Enterprise",Units:60,PPU:640,GrossRev:38400,Disc:5,NetRev:36480,DeferredChg:1600,RecogRev:38080,ARR:437760,MRR:36480},
+  {Month:"2024-05",BU:"North America",Product:"Product C",RevType:"New",Segment:"SMB",Units:25,PPU:490,GrossRev:12250,Disc:13,NetRev:10658,DeferredChg:-600,RecogRev:10058,ARR:127896,MRR:10658},
+  {Month:"2024-06",BU:"North America",Product:"Product C",RevType:"Renewal",Segment:"Mid-Market",Units:50,PPU:600,GrossRev:30000,Disc:7,NetRev:27900,DeferredChg:1200,RecogRev:29100,ARR:334800,MRR:27900},
+  {Month:"2024-07",BU:"North America",Product:"Product C",RevType:"Expansion",Segment:"Enterprise",Units:65,PPU:660,GrossRev:42900,Disc:5,NetRev:40755,DeferredChg:1800,RecogRev:42555,ARR:489060,MRR:40755},
+  {Month:"2024-08",BU:"North America",Product:"Product C",RevType:"New",Segment:"Mid-Market",Units:35,PPU:540,GrossRev:18900,Disc:9,NetRev:17199,DeferredChg:700,RecogRev:17899,ARR:206388,MRR:17199},
+  {Month:"2024-09",BU:"North America",Product:"Product C",RevType:"Renewal",Segment:"SMB",Units:28,PPU:505,GrossRev:14140,Disc:11,NetRev:12585,DeferredChg:-500,RecogRev:12085,ARR:151020,MRR:12585},
+  {Month:"2024-10",BU:"North America",Product:"Product C",RevType:"Expansion",Segment:"Enterprise",Units:70,PPU:680,GrossRev:47600,Disc:5,NetRev:45220,DeferredChg:2000,RecogRev:47220,ARR:542640,MRR:45220},
+  {Month:"2024-11",BU:"North America",Product:"Product C",RevType:"New",Segment:"Mid-Market",Units:45,PPU:580,GrossRev:26100,Disc:8,NetRev:24012,DeferredChg:900,RecogRev:24912,ARR:288144,MRR:24012},
+  {Month:"2024-12",BU:"North America",Product:"Product C",RevType:"Renewal",Segment:"Enterprise",Units:58,PPU:630,GrossRev:36540,Disc:6,NetRev:34348,DeferredChg:1500,RecogRev:35848,ARR:412176,MRR:34348},
+  {Month:"2025-01",BU:"North America",Product:"Product C",RevType:"Expansion",Segment:"SMB",Units:32,PPU:510,GrossRev:16320,Disc:11,NetRev:14525,DeferredChg:-700,RecogRev:13825,ARR:174300,MRR:14525},
+  {Month:"2025-02",BU:"North America",Product:"Product C",RevType:"Renewal",Segment:"Enterprise",Units:60,PPU:645,GrossRev:38700,Disc:5,NetRev:36765,DeferredChg:1600,RecogRev:38365,ARR:441180,MRR:36765},
+  {Month:"2025-03",BU:"North America",Product:"Product C",RevType:"New",Segment:"Mid-Market",Units:42,PPU:565,GrossRev:23730,Disc:8,NetRev:21832,DeferredChg:900,RecogRev:22732,ARR:261984,MRR:21832},
+  {Month:"2025-04",BU:"North America",Product:"Product C",RevType:"Expansion",Segment:"Enterprise",Units:63,PPU:650,GrossRev:40950,Disc:5,NetRev:38903,DeferredChg:1700,RecogRev:40603,ARR:466836,MRR:38903},
+  {Month:"2025-05",BU:"North America",Product:"Product C",RevType:"New",Segment:"SMB",Units:27,PPU:495,GrossRev:13365,Disc:12,NetRev:11761,DeferredChg:-500,RecogRev:11261,ARR:141132,MRR:11761},
+  {Month:"2025-06",BU:"North America",Product:"Product C",RevType:"Renewal",Segment:"Mid-Market",Units:52,PPU:610,GrossRev:31720,Disc:7,NetRev:29500,DeferredChg:1300,RecogRev:30800,ARR:354000,MRR:29500},
+  {Month:"2025-07",BU:"North America",Product:"Product C",RevType:"Expansion",Segment:"Enterprise",Units:68,PPU:670,GrossRev:45560,Disc:5,NetRev:43282,DeferredChg:2000,RecogRev:45282,ARR:519384,MRR:43282},
+  {Month:"2025-08",BU:"North America",Product:"Product C",RevType:"New",Segment:"Mid-Market",Units:37,PPU:548,GrossRev:20276,Disc:9,NetRev:18451,DeferredChg:800,RecogRev:19251,ARR:221412,MRR:18451},
+  {Month:"2025-09",BU:"North America",Product:"Product C",RevType:"Renewal",Segment:"SMB",Units:30,PPU:512,GrossRev:15360,Disc:11,NetRev:13670,DeferredChg:-400,RecogRev:13270,ARR:164040,MRR:13670},
+  {Month:"2025-10",BU:"North America",Product:"Product C",RevType:"Expansion",Segment:"Enterprise",Units:72,PPU:690,GrossRev:49680,Disc:5,NetRev:47196,DeferredChg:2100,RecogRev:49296,ARR:566352,MRR:47196},
+  {Month:"2025-11",BU:"North America",Product:"Product C",RevType:"New",Segment:"Mid-Market",Units:46,PPU:585,GrossRev:26910,Disc:8,NetRev:24757,DeferredChg:1000,RecogRev:25757,ARR:297084,MRR:24757},
+  {Month:"2025-12",BU:"North America",Product:"Product C",RevType:"Renewal",Segment:"Enterprise",Units:61,PPU:638,GrossRev:38918,Disc:6,NetRev:36583,DeferredChg:1600,RecogRev:38183,ARR:438996,MRR:36583},
+  {Month:"2024-01",BU:"Europe",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:100,PPU:800,GrossRev:80000,Disc:5,NetRev:76000,DeferredChg:3200,RecogRev:79200,ARR:912000,MRR:76000},
+  {Month:"2024-02",BU:"Europe",Product:"Product A",RevType:"New",Segment:"Mid-Market",Units:80,PPU:770,GrossRev:61600,Disc:7,NetRev:57288,DeferredChg:2200,RecogRev:59488,ARR:687456,MRR:57288},
+  {Month:"2024-03",BU:"Europe",Product:"Product A",RevType:"Expansion",Segment:"SMB",Units:60,PPU:730,GrossRev:43800,Disc:9,NetRev:39858,DeferredChg:-1200,RecogRev:38658,ARR:478296,MRR:39858},
+  {Month:"2024-04",BU:"Europe",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:105,PPU:810,GrossRev:85050,Disc:5,NetRev:80798,DeferredChg:3600,RecogRev:84398,ARR:969576,MRR:80798},
+  {Month:"2024-05",BU:"Europe",Product:"Product A",RevType:"Expansion",Segment:"Mid-Market",Units:85,PPU:780,GrossRev:66300,Disc:6,NetRev:62322,DeferredChg:2600,RecogRev:64922,ARR:747864,MRR:62322},
+  {Month:"2024-06",BU:"Europe",Product:"Product A",RevType:"New",Segment:"SMB",Units:55,PPU:720,GrossRev:39600,Disc:10,NetRev:35640,DeferredChg:-1000,RecogRev:34640,ARR:427680,MRR:35640},
+  {Month:"2024-07",BU:"Europe",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:110,PPU:820,GrossRev:90200,Disc:5,NetRev:85690,DeferredChg:4000,RecogRev:89690,ARR:1028280,MRR:85690},
+  {Month:"2024-08",BU:"Europe",Product:"Product A",RevType:"New",Segment:"Mid-Market",Units:75,PPU:760,GrossRev:57000,Disc:8,NetRev:52440,DeferredChg:1800,RecogRev:54240,ARR:629280,MRR:52440},
+  {Month:"2024-09",BU:"Europe",Product:"Product A",RevType:"Expansion",Segment:"Enterprise",Units:115,PPU:830,GrossRev:95450,Disc:5,NetRev:90678,DeferredChg:4200,RecogRev:94878,ARR:1088136,MRR:90678},
+  {Month:"2024-10",BU:"Europe",Product:"Product A",RevType:"Renewal",Segment:"SMB",Units:50,PPU:710,GrossRev:35500,Disc:11,NetRev:31595,DeferredChg:-1400,RecogRev:30195,ARR:379140,MRR:31595},
+  {Month:"2024-11",BU:"Europe",Product:"Product A",RevType:"New",Segment:"Enterprise",Units:120,PPU:840,GrossRev:100800,Disc:5,NetRev:95760,DeferredChg:4800,RecogRev:100560,ARR:1149120,MRR:95760},
+  {Month:"2024-12",BU:"Europe",Product:"Product A",RevType:"Expansion",Segment:"Mid-Market",Units:88,PPU:785,GrossRev:69080,Disc:6,NetRev:64935,DeferredChg:2900,RecogRev:67835,ARR:779220,MRR:64935},
+  {Month:"2025-01",BU:"Europe",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:118,PPU:845,GrossRev:99710,Disc:5,NetRev:94725,DeferredChg:4600,RecogRev:99325,ARR:1136700,MRR:94725},
+  {Month:"2025-02",BU:"Europe",Product:"Product A",RevType:"New",Segment:"Mid-Market",Units:82,PPU:775,GrossRev:63550,Disc:7,NetRev:59102,DeferredChg:2300,RecogRev:61402,ARR:709224,MRR:59102},
+  {Month:"2025-03",BU:"Europe",Product:"Product A",RevType:"Expansion",Segment:"SMB",Units:62,PPU:735,GrossRev:45570,Disc:9,NetRev:41469,DeferredChg:-1100,RecogRev:40369,ARR:497628,MRR:41469},
+  {Month:"2025-04",BU:"Europe",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:122,PPU:855,GrossRev:104310,Disc:5,NetRev:99095,DeferredChg:5000,RecogRev:104095,ARR:1189140,MRR:99095},
+  {Month:"2025-05",BU:"Europe",Product:"Product A",RevType:"Expansion",Segment:"Mid-Market",Units:88,PPU:785,GrossRev:69080,Disc:6,NetRev:64935,DeferredChg:3000,RecogRev:67935,ARR:779220,MRR:64935},
+  {Month:"2025-06",BU:"Europe",Product:"Product A",RevType:"New",Segment:"SMB",Units:57,PPU:725,GrossRev:41325,Disc:10,NetRev:37193,DeferredChg:-900,RecogRev:36293,ARR:446316,MRR:37193},
+  {Month:"2025-07",BU:"Europe",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:125,PPU:860,GrossRev:107500,Disc:4,NetRev:103200,DeferredChg:5200,RecogRev:108400,ARR:1238400,MRR:103200},
+  {Month:"2025-08",BU:"Europe",Product:"Product A",RevType:"New",Segment:"Mid-Market",Units:78,PPU:765,GrossRev:59670,Disc:8,NetRev:54896,DeferredChg:2000,RecogRev:56896,ARR:658752,MRR:54896},
+  {Month:"2025-09",BU:"Europe",Product:"Product A",RevType:"Expansion",Segment:"Enterprise",Units:120,PPU:840,GrossRev:100800,Disc:5,NetRev:95760,DeferredChg:4800,RecogRev:100560,ARR:1149120,MRR:95760},
+  {Month:"2025-10",BU:"Europe",Product:"Product A",RevType:"Renewal",Segment:"SMB",Units:52,PPU:715,GrossRev:37180,Disc:11,NetRev:33090,DeferredChg:-1300,RecogRev:31790,ARR:397080,MRR:33090},
+  {Month:"2025-11",BU:"Europe",Product:"Product A",RevType:"New",Segment:"Enterprise",Units:128,PPU:848,GrossRev:108544,Disc:5,NetRev:103117,DeferredChg:5300,RecogRev:108417,ARR:1237404,MRR:103117},
+  {Month:"2025-12",BU:"Europe",Product:"Product A",RevType:"Expansion",Segment:"Mid-Market",Units:90,PPU:790,GrossRev:71100,Disc:6,NetRev:66834,DeferredChg:3100,RecogRev:69934,ARR:802008,MRR:66834},
+  {Month:"2024-01",BU:"Europe",Product:"Product B",RevType:"New",Segment:"Enterprise",Units:70,PPU:1080,GrossRev:75600,Disc:5,NetRev:71820,DeferredChg:3100,RecogRev:74920,ARR:861840,MRR:71820},
+  {Month:"2024-02",BU:"Europe",Product:"Product B",RevType:"Expansion",Segment:"Mid-Market",Units:50,PPU:1040,GrossRev:52000,Disc:8,NetRev:47840,DeferredChg:2000,RecogRev:49840,ARR:574080,MRR:47840},
+  {Month:"2024-03",BU:"Europe",Product:"Product B",RevType:"Renewal",Segment:"SMB",Units:35,PPU:990,GrossRev:34650,Disc:12,NetRev:30492,DeferredChg:-1100,RecogRev:29392,ARR:365904,MRR:30492},
+  {Month:"2024-04",BU:"Europe",Product:"Product B",RevType:"New",Segment:"Enterprise",Units:78,PPU:1120,GrossRev:87360,Disc:5,NetRev:82992,DeferredChg:3800,RecogRev:86792,ARR:995904,MRR:82992},
+  {Month:"2024-05",BU:"Europe",Product:"Product B",RevType:"Renewal",Segment:"Mid-Market",Units:55,PPU:1060,GrossRev:58300,Disc:7,NetRev:54219,DeferredChg:2300,RecogRev:56519,ARR:650628,MRR:54219},
+  {Month:"2024-06",BU:"Europe",Product:"Product B",RevType:"Expansion",Segment:"Enterprise",Units:82,PPU:1140,GrossRev:93480,Disc:5,NetRev:88806,DeferredChg:4200,RecogRev:93006,ARR:1065672,MRR:88806},
+  {Month:"2024-07",BU:"Europe",Product:"Product B",RevType:"New",Segment:"SMB",Units:38,PPU:1000,GrossRev:38000,Disc:11,NetRev:33820,DeferredChg:-1500,RecogRev:32320,ARR:405840,MRR:33820},
+  {Month:"2024-08",BU:"Europe",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:85,PPU:1160,GrossRev:98600,Disc:5,NetRev:93670,DeferredChg:4500,RecogRev:98170,ARR:1124040,MRR:93670},
+  {Month:"2024-09",BU:"Europe",Product:"Product B",RevType:"Expansion",Segment:"Mid-Market",Units:58,PPU:1080,GrossRev:62640,Disc:7,NetRev:58255,DeferredChg:2500,RecogRev:60755,ARR:699060,MRR:58255},
+  {Month:"2024-10",BU:"Europe",Product:"Product B",RevType:"New",Segment:"SMB",Units:32,PPU:970,GrossRev:31040,Disc:13,NetRev:27005,DeferredChg:-1800,RecogRev:25205,ARR:324060,MRR:27005},
+  {Month:"2024-11",BU:"Europe",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:90,PPU:1180,GrossRev:106200,Disc:5,NetRev:100890,DeferredChg:5000,RecogRev:105890,ARR:1210680,MRR:100890},
+  {Month:"2024-12",BU:"Europe",Product:"Product B",RevType:"Expansion",Segment:"Mid-Market",Units:60,PPU:1090,GrossRev:65400,Disc:7,NetRev:60822,DeferredChg:2800,RecogRev:63622,ARR:729864,MRR:60822},
+  {Month:"2025-01",BU:"Europe",Product:"Product B",RevType:"New",Segment:"Enterprise",Units:88,PPU:1200,GrossRev:105600,Disc:5,NetRev:100320,DeferredChg:5100,RecogRev:105420,ARR:1203840,MRR:100320},
+  {Month:"2025-02",BU:"Europe",Product:"Product B",RevType:"Expansion",Segment:"Mid-Market",Units:52,PPU:1050,GrossRev:54600,Disc:8,NetRev:50232,DeferredChg:2200,RecogRev:52432,ARR:602784,MRR:50232},
+  {Month:"2025-03",BU:"Europe",Product:"Product B",RevType:"Renewal",Segment:"SMB",Units:36,PPU:995,GrossRev:35820,Disc:12,NetRev:31522,DeferredChg:-1000,RecogRev:30522,ARR:378264,MRR:31522},
+  {Month:"2025-04",BU:"Europe",Product:"Product B",RevType:"New",Segment:"Enterprise",Units:92,PPU:1220,GrossRev:112240,Disc:5,NetRev:106628,DeferredChg:5400,RecogRev:112028,ARR:1279536,MRR:106628},
+  {Month:"2025-05",BU:"Europe",Product:"Product B",RevType:"Renewal",Segment:"Mid-Market",Units:57,PPU:1070,GrossRev:60990,Disc:7,NetRev:56721,DeferredChg:2500,RecogRev:59221,ARR:680652,MRR:56721},
+  {Month:"2025-06",BU:"Europe",Product:"Product B",RevType:"Expansion",Segment:"Enterprise",Units:86,PPU:1155,GrossRev:99330,Disc:5,NetRev:94364,DeferredChg:4600,RecogRev:98964,ARR:1132368,MRR:94364},
+  {Month:"2025-07",BU:"Europe",Product:"Product B",RevType:"New",Segment:"SMB",Units:40,PPU:1005,GrossRev:40200,Disc:11,NetRev:35778,DeferredChg:-1400,RecogRev:34378,ARR:429336,MRR:35778},
+  {Month:"2025-08",BU:"Europe",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:88,PPU:1170,GrossRev:102960,Disc:5,NetRev:97812,DeferredChg:4800,RecogRev:102612,ARR:1173744,MRR:97812},
+  {Month:"2025-09",BU:"Europe",Product:"Product B",RevType:"Expansion",Segment:"Mid-Market",Units:60,PPU:1090,GrossRev:65400,Disc:7,NetRev:60822,DeferredChg:2800,RecogRev:63622,ARR:729864,MRR:60822},
+  {Month:"2025-10",BU:"Europe",Product:"Product B",RevType:"New",Segment:"SMB",Units:34,PPU:975,GrossRev:33150,Disc:13,NetRev:28841,DeferredChg:-1700,RecogRev:27141,ARR:346092,MRR:28841},
+  {Month:"2025-11",BU:"Europe",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:94,PPU:1190,GrossRev:111860,Disc:5,NetRev:106267,DeferredChg:5400,RecogRev:111667,ARR:1275204,MRR:106267},
+  {Month:"2025-12",BU:"Europe",Product:"Product B",RevType:"Expansion",Segment:"Mid-Market",Units:62,PPU:1095,GrossRev:67890,Disc:7,NetRev:63138,DeferredChg:3000,RecogRev:66138,ARR:757656,MRR:63138},
+  {Month:"2024-01",BU:"Europe",Product:"Product C",RevType:"New",Segment:"SMB",Units:25,PPU:480,GrossRev:12000,Disc:13,NetRev:10440,DeferredChg:-500,RecogRev:9940,ARR:125280,MRR:10440},
+  {Month:"2024-02",BU:"Europe",Product:"Product C",RevType:"Renewal",Segment:"Enterprise",Units:48,PPU:590,GrossRev:28320,Disc:7,NetRev:26338,DeferredChg:1100,RecogRev:27438,ARR:316056,MRR:26338},
+  {Month:"2024-03",BU:"Europe",Product:"Product C",RevType:"Expansion",Segment:"Mid-Market",Units:38,PPU:545,GrossRev:20710,Disc:9,NetRev:18846,DeferredChg:700,RecogRev:19546,ARR:226152,MRR:18846},
+  {Month:"2024-04",BU:"Europe",Product:"Product C",RevType:"New",Segment:"Enterprise",Units:52,PPU:610,GrossRev:31720,Disc:6,NetRev:29817,DeferredChg:1300,RecogRev:31117,ARR:357804,MRR:29817},
+  {Month:"2024-05",BU:"Europe",Product:"Product C",RevType:"Renewal",Segment:"SMB",Units:22,PPU:475,GrossRev:10450,Disc:14,NetRev:8987,DeferredChg:-400,RecogRev:8587,ARR:107844,MRR:8987},
+  {Month:"2024-06",BU:"Europe",Product:"Product C",RevType:"Expansion",Segment:"Mid-Market",Units:42,PPU:570,GrossRev:23940,Disc:8,NetRev:22025,DeferredChg:900,RecogRev:22925,ARR:264300,MRR:22025},
+  {Month:"2024-07",BU:"Europe",Product:"Product C",RevType:"New",Segment:"Enterprise",Units:56,PPU:625,GrossRev:35000,Disc:6,NetRev:32900,DeferredChg:1500,RecogRev:34400,ARR:394800,MRR:32900},
+  {Month:"2024-08",BU:"Europe",Product:"Product C",RevType:"Renewal",Segment:"Mid-Market",Units:32,PPU:520,GrossRev:16640,Disc:10,NetRev:14976,DeferredChg:500,RecogRev:15476,ARR:179712,MRR:14976},
+  {Month:"2024-09",BU:"Europe",Product:"Product C",RevType:"Expansion",Segment:"SMB",Units:20,PPU:465,GrossRev:9300,Disc:15,NetRev:7905,DeferredChg:-300,RecogRev:7605,ARR:94860,MRR:7905},
+  {Month:"2024-10",BU:"Europe",Product:"Product C",RevType:"New",Segment:"Enterprise",Units:60,PPU:640,GrossRev:38400,Disc:6,NetRev:36096,DeferredChg:1600,RecogRev:37696,ARR:433152,MRR:36096},
+  {Month:"2024-11",BU:"Europe",Product:"Product C",RevType:"Renewal",Segment:"Mid-Market",Units:40,PPU:555,GrossRev:22200,Disc:9,NetRev:20202,DeferredChg:800,RecogRev:21002,ARR:242424,MRR:20202},
+  {Month:"2024-12",BU:"Europe",Product:"Product C",RevType:"Expansion",Segment:"Enterprise",Units:54,PPU:615,GrossRev:33210,Disc:6,NetRev:31217,DeferredChg:1400,RecogRev:32617,ARR:374604,MRR:31217},
+  {Month:"2025-01",BU:"Europe",Product:"Product C",RevType:"New",Segment:"SMB",Units:26,PPU:485,GrossRev:12610,Disc:13,NetRev:10971,DeferredChg:-450,RecogRev:10521,ARR:131652,MRR:10971},
+  {Month:"2025-02",BU:"Europe",Product:"Product C",RevType:"Renewal",Segment:"Enterprise",Units:50,PPU:595,GrossRev:29750,Disc:7,NetRev:27668,DeferredChg:1200,RecogRev:28868,ARR:332016,MRR:27668},
+  {Month:"2025-03",BU:"Europe",Product:"Product C",RevType:"Expansion",Segment:"Mid-Market",Units:39,PPU:548,GrossRev:21372,Disc:9,NetRev:19448,DeferredChg:750,RecogRev:20198,ARR:233376,MRR:19448},
+  {Month:"2025-04",BU:"Europe",Product:"Product C",RevType:"New",Segment:"Enterprise",Units:54,PPU:615,GrossRev:33210,Disc:6,NetRev:31217,DeferredChg:1400,RecogRev:32617,ARR:374604,MRR:31217},
+  {Month:"2025-05",BU:"Europe",Product:"Product C",RevType:"Renewal",Segment:"SMB",Units:23,PPU:478,GrossRev:10994,Disc:14,NetRev:9455,DeferredChg:-380,RecogRev:9075,ARR:113460,MRR:9455},
+  {Month:"2025-06",BU:"Europe",Product:"Product C",RevType:"Expansion",Segment:"Mid-Market",Units:44,PPU:575,GrossRev:25300,Disc:8,NetRev:23276,DeferredChg:1000,RecogRev:24276,ARR:279312,MRR:23276},
+  {Month:"2025-07",BU:"Europe",Product:"Product C",RevType:"New",Segment:"Enterprise",Units:58,PPU:630,GrossRev:36540,Disc:6,NetRev:34348,DeferredChg:1600,RecogRev:35948,ARR:412176,MRR:34348},
+  {Month:"2025-08",BU:"Europe",Product:"Product C",RevType:"Renewal",Segment:"Mid-Market",Units:33,PPU:524,GrossRev:17292,Disc:10,NetRev:15563,DeferredChg:550,RecogRev:16113,ARR:186756,MRR:15563},
+  {Month:"2025-09",BU:"Europe",Product:"Product C",RevType:"Expansion",Segment:"SMB",Units:21,PPU:469,GrossRev:9849,Disc:15,NetRev:8372,DeferredChg:-280,RecogRev:8092,ARR:100464,MRR:8372},
+  {Month:"2025-10",BU:"Europe",Product:"Product C",RevType:"New",Segment:"Enterprise",Units:62,PPU:645,GrossRev:39990,Disc:6,NetRev:37591,DeferredChg:1700,RecogRev:39291,ARR:451092,MRR:37591},
+  {Month:"2025-11",BU:"Europe",Product:"Product C",RevType:"Renewal",Segment:"Mid-Market",Units:41,PPU:558,GrossRev:22878,Disc:9,NetRev:20819,DeferredChg:850,RecogRev:21669,ARR:249828,MRR:20819},
+  {Month:"2025-12",BU:"Europe",Product:"Product C",RevType:"Expansion",Segment:"Enterprise",Units:55,PPU:620,GrossRev:34100,Disc:6,NetRev:32054,DeferredChg:1450,RecogRev:33504,ARR:384648,MRR:32054},
+  {Month:"2024-01",BU:"APAC",Product:"Product A",RevType:"New",Segment:"Mid-Market",Units:70,PPU:720,GrossRev:50400,Disc:8,NetRev:46368,DeferredChg:1800,RecogRev:48168,ARR:556416,MRR:46368},
+  {Month:"2024-02",BU:"APAC",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:90,PPU:780,GrossRev:70200,Disc:6,NetRev:65988,DeferredChg:2800,RecogRev:68788,ARR:791856,MRR:65988},
+  {Month:"2024-03",BU:"APAC",Product:"Product A",RevType:"Expansion",Segment:"SMB",Units:45,PPU:680,GrossRev:30600,Disc:10,NetRev:27540,DeferredChg:-900,RecogRev:26640,ARR:330480,MRR:27540},
+  {Month:"2024-04",BU:"APAC",Product:"Product A",RevType:"New",Segment:"Enterprise",Units:95,PPU:790,GrossRev:75050,Disc:7,NetRev:69797,DeferredChg:3200,RecogRev:72997,ARR:837564,MRR:69797},
+  {Month:"2024-05",BU:"APAC",Product:"Product A",RevType:"Renewal",Segment:"Mid-Market",Units:75,PPU:740,GrossRev:55500,Disc:8,NetRev:51060,DeferredChg:2100,RecogRev:53160,ARR:612720,MRR:51060},
+  {Month:"2024-06",BU:"APAC",Product:"Product A",RevType:"Expansion",Segment:"Enterprise",Units:100,PPU:800,GrossRev:80000,Disc:6,NetRev:75200,DeferredChg:3600,RecogRev:78800,ARR:902400,MRR:75200},
+  {Month:"2024-07",BU:"APAC",Product:"Product A",RevType:"New",Segment:"SMB",Units:50,PPU:690,GrossRev:34500,Disc:11,NetRev:30705,DeferredChg:-1000,RecogRev:29705,ARR:368460,MRR:30705},
+  {Month:"2024-08",BU:"APAC",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:105,PPU:810,GrossRev:85050,Disc:6,NetRev:79947,DeferredChg:3800,RecogRev:83747,ARR:959364,MRR:79947},
+  {Month:"2024-09",BU:"APAC",Product:"Product A",RevType:"Expansion",Segment:"Mid-Market",Units:80,PPU:750,GrossRev:60000,Disc:8,NetRev:55200,DeferredChg:2300,RecogRev:57500,ARR:662400,MRR:55200},
+  {Month:"2024-10",BU:"APAC",Product:"Product A",RevType:"New",Segment:"SMB",Units:42,PPU:672,GrossRev:28224,Disc:12,NetRev:24837,DeferredChg:-800,RecogRev:24037,ARR:298044,MRR:24837},
+  {Month:"2024-11",BU:"APAC",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:110,PPU:820,GrossRev:90200,Disc:6,NetRev:84788,DeferredChg:4000,RecogRev:88788,ARR:1017456,MRR:84788},
+  {Month:"2024-12",BU:"APAC",Product:"Product A",RevType:"Expansion",Segment:"Mid-Market",Units:78,PPU:745,GrossRev:58110,Disc:8,NetRev:53461,DeferredChg:2200,RecogRev:55661,ARR:641532,MRR:53461},
+  {Month:"2025-01",BU:"APAC",Product:"Product A",RevType:"New",Segment:"Enterprise",Units:100,PPU:800,GrossRev:80000,Disc:6,NetRev:75200,DeferredChg:3600,RecogRev:78800,ARR:902400,MRR:75200},
+  {Month:"2025-02",BU:"APAC",Product:"Product A",RevType:"Renewal",Segment:"Mid-Market",Units:80,PPU:750,GrossRev:60000,Disc:7,NetRev:55800,DeferredChg:2500,RecogRev:58300,ARR:669600,MRR:55800},
+  {Month:"2025-03",BU:"APAC",Product:"Product A",RevType:"Expansion",Segment:"SMB",Units:47,PPU:685,GrossRev:32195,Disc:10,NetRev:28976,DeferredChg:-850,RecogRev:28126,ARR:347712,MRR:28976},
+  {Month:"2025-04",BU:"APAC",Product:"Product A",RevType:"New",Segment:"Enterprise",Units:102,PPU:798,GrossRev:81396,Disc:7,NetRev:75698,DeferredChg:3400,RecogRev:79098,ARR:908376,MRR:75698},
+  {Month:"2025-05",BU:"APAC",Product:"Product A",RevType:"Renewal",Segment:"Mid-Market",Units:78,PPU:745,GrossRev:58110,Disc:8,NetRev:53461,DeferredChg:2200,RecogRev:55661,ARR:641532,MRR:53461},
+  {Month:"2025-06",BU:"APAC",Product:"Product A",RevType:"Expansion",Segment:"Enterprise",Units:105,PPU:808,GrossRev:84840,Disc:6,NetRev:79750,DeferredChg:3800,RecogRev:83550,ARR:957000,MRR:79750},
+  {Month:"2025-07",BU:"APAC",Product:"Product A",RevType:"New",Segment:"SMB",Units:52,PPU:694,GrossRev:36088,Disc:11,NetRev:32118,DeferredChg:-950,RecogRev:31168,ARR:385416,MRR:32118},
+  {Month:"2025-08",BU:"APAC",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:108,PPU:815,GrossRev:88020,Disc:6,NetRev:82739,DeferredChg:4000,RecogRev:86739,ARR:992868,MRR:82739},
+  {Month:"2025-09",BU:"APAC",Product:"Product A",RevType:"Expansion",Segment:"Mid-Market",Units:83,PPU:755,GrossRev:62665,Disc:8,NetRev:57652,DeferredChg:2500,RecogRev:60152,ARR:691824,MRR:57652},
+  {Month:"2025-10",BU:"APAC",Product:"Product A",RevType:"New",Segment:"SMB",Units:44,PPU:676,GrossRev:29744,Disc:12,NetRev:26175,DeferredChg:-750,RecogRev:25425,ARR:314100,MRR:26175},
+  {Month:"2025-11",BU:"APAC",Product:"Product A",RevType:"Renewal",Segment:"Enterprise",Units:112,PPU:825,GrossRev:92400,Disc:6,NetRev:86856,DeferredChg:4100,RecogRev:90956,ARR:1042272,MRR:86856},
+  {Month:"2025-12",BU:"APAC",Product:"Product A",RevType:"Expansion",Segment:"Mid-Market",Units:80,PPU:750,GrossRev:60000,Disc:8,NetRev:55200,DeferredChg:2300,RecogRev:57500,ARR:662400,MRR:55200},
+  {Month:"2024-01",BU:"APAC",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:55,PPU:1020,GrossRev:56100,Disc:7,NetRev:52173,DeferredChg:2200,RecogRev:54373,ARR:626076,MRR:52173},
+  {Month:"2024-02",BU:"APAC",Product:"Product B",RevType:"New",Segment:"SMB",Units:30,PPU:970,GrossRev:29100,Disc:13,NetRev:25317,DeferredChg:-1000,RecogRev:24317,ARR:303804,MRR:25317},
+  {Month:"2024-03",BU:"APAC",Product:"Product B",RevType:"Expansion",Segment:"Mid-Market",Units:48,PPU:1040,GrossRev:49920,Disc:8,NetRev:45926,DeferredChg:1900,RecogRev:47826,ARR:551112,MRR:45926},
+  {Month:"2024-04",BU:"APAC",Product:"Product B",RevType:"New",Segment:"Enterprise",Units:62,PPU:1080,GrossRev:66960,Disc:6,NetRev:62942,DeferredChg:2800,RecogRev:65742,ARR:755304,MRR:62942},
+  {Month:"2024-05",BU:"APAC",Product:"Product B",RevType:"Renewal",Segment:"Mid-Market",Units:44,PPU:1020,GrossRev:44880,Disc:8,NetRev:41290,DeferredChg:1700,RecogRev:42990,ARR:495480,MRR:41290},
+  {Month:"2024-06",BU:"APAC",Product:"Product B",RevType:"Expansion",Segment:"SMB",Units:28,PPU:960,GrossRev:26880,Disc:14,NetRev:23117,DeferredChg:-900,RecogRev:22217,ARR:277404,MRR:23117},
+  {Month:"2024-07",BU:"APAC",Product:"Product B",RevType:"New",Segment:"Enterprise",Units:68,PPU:1100,GrossRev:74800,Disc:6,NetRev:70312,DeferredChg:3200,RecogRev:73512,ARR:843744,MRR:70312},
+  {Month:"2024-08",BU:"APAC",Product:"Product B",RevType:"Renewal",Segment:"Mid-Market",Units:46,PPU:1028,GrossRev:47288,Disc:8,NetRev:43505,DeferredChg:1800,RecogRev:45305,ARR:522060,MRR:43505},
+  {Month:"2024-09",BU:"APAC",Product:"Product B",RevType:"Expansion",Segment:"Enterprise",Units:70,PPU:1110,GrossRev:77700,Disc:6,NetRev:73038,DeferredChg:3400,RecogRev:76438,ARR:876456,MRR:73038},
+  {Month:"2024-10",BU:"APAC",Product:"Product B",RevType:"New",Segment:"SMB",Units:25,PPU:950,GrossRev:23750,Disc:15,NetRev:20188,DeferredChg:-1100,RecogRev:19088,ARR:242256,MRR:20188},
+  {Month:"2024-11",BU:"APAC",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:72,PPU:1120,GrossRev:80640,Disc:6,NetRev:75802,DeferredChg:3600,RecogRev:79402,ARR:909624,MRR:75802},
+  {Month:"2024-12",BU:"APAC",Product:"Product B",RevType:"Expansion",Segment:"Mid-Market",Units:50,PPU:1048,GrossRev:52400,Disc:8,NetRev:48208,DeferredChg:2000,RecogRev:50208,ARR:578496,MRR:48208},
+  {Month:"2025-01",BU:"APAC",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:75,PPU:1140,GrossRev:85500,Disc:6,NetRev:80370,DeferredChg:3800,RecogRev:84170,ARR:964440,MRR:80370},
+  {Month:"2025-02",BU:"APAC",Product:"Product B",RevType:"New",Segment:"SMB",Units:32,PPU:975,GrossRev:31200,Disc:13,NetRev:27144,DeferredChg:-900,RecogRev:26244,ARR:325728,MRR:27144},
+  {Month:"2025-03",BU:"APAC",Product:"Product B",RevType:"Expansion",Segment:"Mid-Market",Units:50,PPU:1045,GrossRev:52250,Disc:8,NetRev:48070,DeferredChg:2000,RecogRev:50070,ARR:576840,MRR:48070},
+  {Month:"2025-04",BU:"APAC",Product:"Product B",RevType:"New",Segment:"Enterprise",Units:65,PPU:1090,GrossRev:70850,Disc:6,NetRev:66599,DeferredChg:3000,RecogRev:69599,ARR:799188,MRR:66599},
+  {Month:"2025-05",BU:"APAC",Product:"Product B",RevType:"Renewal",Segment:"Mid-Market",Units:46,PPU:1025,GrossRev:47150,Disc:8,NetRev:43378,DeferredChg:1800,RecogRev:45178,ARR:520536,MRR:43378},
+  {Month:"2025-06",BU:"APAC",Product:"Product B",RevType:"Expansion",Segment:"SMB",Units:30,PPU:965,GrossRev:28950,Disc:14,NetRev:24897,DeferredChg:-800,RecogRev:24097,ARR:298764,MRR:24897},
+  {Month:"2025-07",BU:"APAC",Product:"Product B",RevType:"New",Segment:"Enterprise",Units:70,PPU:1110,GrossRev:77700,Disc:6,NetRev:73038,DeferredChg:3500,RecogRev:76538,ARR:876456,MRR:73038},
+  {Month:"2025-08",BU:"APAC",Product:"Product B",RevType:"Renewal",Segment:"Mid-Market",Units:48,PPU:1032,GrossRev:49536,Disc:8,NetRev:45573,DeferredChg:1900,RecogRev:47473,ARR:546876,MRR:45573},
+  {Month:"2025-09",BU:"APAC",Product:"Product B",RevType:"Expansion",Segment:"Enterprise",Units:72,PPU:1115,GrossRev:80280,Disc:6,NetRev:75463,DeferredChg:3600,RecogRev:79063,ARR:905556,MRR:75463},
+  {Month:"2025-10",BU:"APAC",Product:"Product B",RevType:"New",Segment:"SMB",Units:27,PPU:955,GrossRev:25785,Disc:15,NetRev:21917,DeferredChg:-1000,RecogRev:20917,ARR:263004,MRR:21917},
+  {Month:"2025-11",BU:"APAC",Product:"Product B",RevType:"Renewal",Segment:"Enterprise",Units:74,PPU:1125,GrossRev:83250,Disc:6,NetRev:78255,DeferredChg:3700,RecogRev:81955,ARR:939060,MRR:78255},
+  {Month:"2025-12",BU:"APAC",Product:"Product B",RevType:"Expansion",Segment:"Mid-Market",Units:52,PPU:1052,GrossRev:54704,Disc:8,NetRev:50327,DeferredChg:2100,RecogRev:52427,ARR:603924,MRR:50327},
+  {Month:"2024-01",BU:"APAC",Product:"Product C",RevType:"Expansion",Segment:"Enterprise",Units:38,PPU:520,GrossRev:19760,Disc:9,NetRev:17982,DeferredChg:700,RecogRev:18682,ARR:215784,MRR:17982},
+  {Month:"2024-02",BU:"APAC",Product:"Product C",RevType:"New",Segment:"Mid-Market",Units:28,PPU:475,GrossRev:13300,Disc:12,NetRev:11704,DeferredChg:-400,RecogRev:11304,ARR:140448,MRR:11704},
+  {Month:"2024-03",BU:"APAC",Product:"Product C",RevType:"Renewal",Segment:"SMB",Units:20,PPU:445,GrossRev:8900,Disc:15,NetRev:7565,DeferredChg:-200,RecogRev:7365,ARR:90780,MRR:7565},
+  {Month:"2024-04",BU:"APAC",Product:"Product C",RevType:"Expansion",Segment:"Mid-Market",Units:35,PPU:495,GrossRev:17325,Disc:10,NetRev:15593,DeferredChg:600,RecogRev:16193,ARR:187116,MRR:15593},
+  {Month:"2024-05",BU:"APAC",Product:"Product C",RevType:"New",Segment:"Enterprise",Units:45,PPU:535,GrossRev:24075,Disc:8,NetRev:22149,DeferredChg:900,RecogRev:23049,ARR:265788,MRR:22149},
+  {Month:"2024-06",BU:"APAC",Product:"Product C",RevType:"Renewal",Segment:"SMB",Units:18,PPU:438,GrossRev:7884,Disc:16,NetRev:6623,DeferredChg:-250,RecogRev:6373,ARR:79476,MRR:6623},
+  {Month:"2024-07",BU:"APAC",Product:"Product C",RevType:"Expansion",Segment:"Enterprise",Units:48,PPU:545,GrossRev:26160,Disc:8,NetRev:24067,DeferredChg:1000,RecogRev:25067,ARR:288804,MRR:24067},
+  {Month:"2024-08",BU:"APAC",Product:"Product C",RevType:"New",Segment:"Mid-Market",Units:30,PPU:480,GrossRev:14400,Disc:12,NetRev:12672,DeferredChg:-450,RecogRev:12222,ARR:152064,MRR:12672},
+  {Month:"2024-09",BU:"APAC",Product:"Product C",RevType:"Renewal",Segment:"Enterprise",Units:50,PPU:555,GrossRev:27750,Disc:8,NetRev:25530,DeferredChg:1100,RecogRev:26630,ARR:306360,MRR:25530},
+  {Month:"2024-10",BU:"APAC",Product:"Product C",RevType:"Expansion",Segment:"SMB",Units:22,PPU:452,GrossRev:9944,Disc:14,NetRev:8552,DeferredChg:-300,RecogRev:8252,ARR:102624,MRR:8552},
+  {Month:"2024-11",BU:"APAC",Product:"Product C",RevType:"New",Segment:"Enterprise",Units:52,PPU:560,GrossRev:29120,Disc:8,NetRev:26790,DeferredChg:1100,RecogRev:27890,ARR:321480,MRR:26790},
+  {Month:"2024-12",BU:"APAC",Product:"Product C",RevType:"Renewal",Segment:"Mid-Market",Units:32,PPU:485,GrossRev:15520,Disc:11,NetRev:13813,DeferredChg:500,RecogRev:14313,ARR:165756,MRR:13813},
+  {Month:"2025-01",BU:"APAC",Product:"Product C",RevType:"Expansion",Segment:"Enterprise",Units:40,PPU:525,GrossRev:21000,Disc:9,NetRev:19110,DeferredChg:800,RecogRev:19910,ARR:229320,MRR:19110},
+  {Month:"2025-02",BU:"APAC",Product:"Product C",RevType:"New",Segment:"Mid-Market",Units:29,PPU:478,GrossRev:13862,Disc:12,NetRev:12199,DeferredChg:-380,RecogRev:11819,ARR:146388,MRR:12199},
+  {Month:"2025-03",BU:"APAC",Product:"Product C",RevType:"Renewal",Segment:"SMB",Units:21,PPU:448,GrossRev:9408,Disc:15,NetRev:7997,DeferredChg:-180,RecogRev:7817,ARR:95964,MRR:7997},
+  {Month:"2025-04",BU:"APAC",Product:"Product C",RevType:"Expansion",Segment:"Mid-Market",Units:36,PPU:498,GrossRev:17928,Disc:10,NetRev:16135,DeferredChg:650,RecogRev:16785,ARR:193620,MRR:16135},
+  {Month:"2025-05",BU:"APAC",Product:"Product C",RevType:"New",Segment:"Enterprise",Units:47,PPU:538,GrossRev:25286,Disc:8,NetRev:23263,DeferredChg:950,RecogRev:24213,ARR:279156,MRR:23263},
+  {Month:"2025-06",BU:"APAC",Product:"Product C",RevType:"Renewal",Segment:"SMB",Units:19,PPU:441,GrossRev:8379,Disc:16,NetRev:7038,DeferredChg:-220,RecogRev:6818,ARR:84456,MRR:7038},
+  {Month:"2025-07",BU:"APAC",Product:"Product C",RevType:"Expansion",Segment:"Enterprise",Units:50,PPU:550,GrossRev:27500,Disc:8,NetRev:25300,DeferredChg:1100,RecogRev:26400,ARR:303600,MRR:25300},
+  {Month:"2025-08",BU:"APAC",Product:"Product C",RevType:"New",Segment:"Mid-Market",Units:31,PPU:482,GrossRev:14942,Disc:12,NetRev:13149,DeferredChg:-420,RecogRev:12729,ARR:157788,MRR:13149},
+  {Month:"2025-09",BU:"APAC",Product:"Product C",RevType:"Renewal",Segment:"Enterprise",Units:52,PPU:558,GrossRev:29016,Disc:8,NetRev:26695,DeferredChg:1150,RecogRev:27845,ARR:320340,MRR:26695},
+  {Month:"2025-10",BU:"APAC",Product:"Product C",RevType:"Expansion",Segment:"SMB",Units:23,PPU:455,GrossRev:10465,Disc:14,NetRev:9000,DeferredChg:-280,RecogRev:8720,ARR:108000,MRR:9000},
+  {Month:"2025-11",BU:"APAC",Product:"Product C",RevType:"New",Segment:"Enterprise",Units:54,PPU:563,GrossRev:30402,Disc:8,NetRev:27970,DeferredChg:1150,RecogRev:29120,ARR:335640,MRR:27970},
+  {Month:"2025-12",BU:"APAC",Product:"Product C",RevType:"Renewal",Segment:"Mid-Market",Units:33,PPU:488,GrossRev:16104,Disc:11,NetRev:14333,DeferredChg:530,RecogRev:14863,ARR:171996,MRR:14333}
+];
+
+// ── Kangaroo brand colours for charts ──
+const C_RED   = '#E8281E';
+const C_GREEN = '#1D9E75';
+const C_GREY  = '#888888';
+const C_NA    = '#E8281E';   // Kangaroo red
+const C_EU    = '#1D9E75';   // positive green
+const C_AP    = '#B0B0B0';   // secondary grey
+const C_PA    = '#E8281E';
+const C_PB    = '#1D9E75';
+const C_PC    = '#B0B0B0';
+const C_ENT   = '#E8281E';
+const C_MM    = '#1D9E75';
+const C_SMB   = '#B0B0B0';
+const C_NEW   = '#E8281E';
+const C_REN   = '#1D9E75';
+const C_EXP   = '#B0B0B0';
+
+// ── Chart.js global defaults ──
+Chart.defaults.color = '#B0B0B0';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+
+const ALL_MONTHS = [...new Set(KANGAROO_DATA.map(d=>d.Month))].sort();
+const fromSel = document.getElementById('f-from');
+const toSel   = document.getElementById('f-to');
+ALL_MONTHS.forEach(m=>{
+  fromSel.innerHTML += `<option value="${m}">${m}</option>`;
+  toSel.innerHTML   += `<option value="${m}">${m}</option>`;
+});
+toSel.value = ALL_MONTHS[ALL_MONTHS.length-1];
+
+// ── Helpers ──
+const fmt  = v => '$'+v.toLocaleString('en-US',{maximumFractionDigits:0});
+const fmtK = v => v>=1e6?'$'+(v/1e6).toFixed(2)+'M':v>=1000?'$'+(v/1000).toFixed(1)+'K':fmt(v);
+const pct  = v => v.toFixed(1)+'%';
+const sum  = (arr,k) => arr.reduce((a,b)=>a+(b[k]||0),0);
+const avg  = (arr,k) => arr.length?sum(arr,k)/arr.length:0;
+const groupBy = (arr,k) => arr.reduce((m,d)=>{(m[d[k]]=m[d[k]]||[]).push(d);return m},{});
+
+const TOOLTIP_DEFAULTS = {
+  backgroundColor:'#1A1A1A',
+  borderColor:'rgba(255,255,255,0.12)',
+  borderWidth:1,
+  titleColor:'#FFFFFF',
+  bodyColor:'#B0B0B0',
+  padding:10
+};
+
+function getFilters(){
+  return {
+    from: document.getElementById('f-from').value || ALL_MONTHS[0],
+    to:   document.getElementById('f-to').value   || ALL_MONTHS[ALL_MONTHS.length-1],
+    bu:   document.getElementById('f-bu').value,
+    prod: document.getElementById('f-product').value,
+    seg:  document.getElementById('f-segment').value,
+    rt:   document.getElementById('f-revtype').value
+  };
+}
+function filterData(f){
+  return KANGAROO_DATA.filter(d=>
+    d.Month>=f.from && d.Month<=f.to &&
+    (!f.bu   || d.BU===f.bu) &&
+    (!f.prod || d.Product===f.prod) &&
+    (!f.seg  || d.Segment===f.seg) &&
+    (!f.rt   || d.RevType===f.rt)
+  );
+}
+function resetFilters(){
+  document.getElementById('f-from').value='';
+  document.getElementById('f-to').value=ALL_MONTHS[ALL_MONTHS.length-1];
+  ['f-bu','f-product','f-segment','f-revtype'].forEach(id=>document.getElementById(id).value='');
+  updateAll();
+}
+
+const charts={};
+function destroyMake(id,type,data,opts){
+  if(charts[id]) charts[id].destroy();
+  const ctx=document.getElementById(id).getContext('2d');
+  charts[id]=new Chart(ctx,{type,data,options:{
+    responsive:true,maintainAspectRatio:false,
+    animation:{duration:300,easing:'easeInOutQuart'},
+    plugins:{
+      legend:{labels:{color:'#B0B0B0',font:{size:10},boxWidth:12}},
+      tooltip:{...TOOLTIP_DEFAULTS}
+    },
+    scales:{
+      x:{ticks:{color:'#B0B0B0',font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}},
+      y:{ticks:{color:'#B0B0B0',font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}}
+    },
+    ...opts
+  }});
+  return charts[id];
+}
+
+// ── Main update ──
+function updateAll(){
+  const f=getFilters();
+  const d=filterData(f);
+  const months=ALL_MONTHS.filter(m=>m>=f.from&&m<=f.to);
+  updateKPIs(d,f,months);
+  updateTrend(d,months);
+  updateBU(d,months);
+  updateProduct(d);
+  updateSegment(d);
+  updateRevType(d);
+  updateDiscount(d);
+  updateScatter(d);
+  updateARR(d,months);
+  updateDeferred(d,months);
+  updateHeatmap(d);
+  updateLeague(d);
+  updateInsights(d,months);
+}
+
+// ── KPIs ──
+function updateKPIs(d,f,months){
+  const netRev=sum(d,'NetRev'), grossRev=sum(d,'GrossRev');
+  const avgDisc=avg(d,'Disc'), totalARR=sum(d,'ARR'), totalUnits=sum(d,'Units');
+  const mid=months[Math.floor(months.length/2)];
+  const dPrior=filterData({...f,to:months[Math.floor(months.length/2)-1]||f.from});
+  const dCur  =filterData({...f,from:mid,to:f.to});
+  const prevNet=sum(dPrior,'NetRev'), curNet=sum(dCur,'NetRev');
+  const chgPct=prevNet>0?((curNet-prevNet)/prevNet*100):0;
+
+  document.getElementById('kpi-net').textContent=fmtK(netRev);
+  document.getElementById('kpi-gross').textContent=fmtK(grossRev);
+  document.getElementById('kpi-disc').textContent=pct(avgDisc);
+  document.getElementById('kpi-arr').textContent=fmtK(totalARR);
+  document.getElementById('kpi-units').textContent=totalUnits.toLocaleString();
+  document.getElementById('kpi-chg').textContent=(chgPct>=0?'↑ +':'↓ ')+pct(Math.abs(chgPct));
+
+  const setT=(id,cls,label)=>{const e=document.getElementById(id);e.textContent=label;e.className='kpi-trend '+cls;};
+  setT('kpi-net-trend','up','● Primary KPI');
+  setT('kpi-gross-trend','up','● Full commercial value');
+  setT('kpi-disc-trend',avgDisc<8?'up':'down',avgDisc<8?'↓ Below risk threshold':'↑ Monitor discount drift');
+  setT('kpi-arr-trend','up','● Annualised');
+  setT('kpi-units-trend','flat','● Volume metric');
+  setT('kpi-chg-trend',chgPct>=0?'up':'down',chgPct>=0?'↑ Growing vs prior period':'↓ Declining vs prior period');
+}
+
+// ── Chart 1: Trend ──
+function updateTrend(d,months){
+  const byM=groupBy(d,'Month');
+  const vals=months.map(m=>byM[m]?sum(byM[m],'NetRev'):0);
+  const roll=vals.map((v,i,a)=>{const s=a.slice(Math.max(0,i-2),i+1);return s.reduce((x,y)=>x+y,0)/s.length;});
+  if(charts['c-trend']) charts['c-trend'].destroy();
+  const ctx=document.getElementById('c-trend').getContext('2d');
+  const grad=ctx.createLinearGradient(0,0,0,260);
+  grad.addColorStop(0,'rgba(232,40,30,0.25)');
+  grad.addColorStop(1,'rgba(232,40,30,0)');
+  charts['c-trend']=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:months.map(m=>m.replace('20','')),
+      datasets:[
+        {label:'Net Revenue',data:vals,borderColor:C_RED,backgroundColor:grad,fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:C_RED,pointBorderColor:'#1A1A1A',pointBorderWidth:1},
+        {label:'3M Rolling Avg',data:roll,borderColor:C_GREEN,borderDash:[6,3],fill:false,tension:0.4,pointRadius:0,borderWidth:1.5}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:300},
+      plugins:{legend:{labels:{color:'#B0B0B0',font:{size:10},boxWidth:12}},tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>(' '+fmtK(c.raw))}}},
+      scales:{
+        x:{ticks:{color:'#B0B0B0',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#B0B0B0',font:{size:9},callback:v=>fmtK(v)},grid:{color:'rgba(255,255,255,0.04)'}}
+      }
+    }
+  });
+}
+
+// ── Chart 2: BU Stacked ──
+function updateBU(d,months){
+  const bus=['North America','Europe','APAC'], cols=[C_NA,C_EU,C_AP];
+  const byM=groupBy(d,'Month');
+  if(charts['c-bu']) charts['c-bu'].destroy();
+  const ctx=document.getElementById('c-bu').getContext('2d');
+  charts['c-bu']=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:months.map(m=>m.replace('20','')),
+      datasets:bus.map((bu,i)=>({
+        label:bu,
+        data:months.map(m=>byM[m]?sum(byM[m].filter(r=>r.BU===bu),'NetRev'):0),
+        backgroundColor:cols[i]+'BB',borderColor:cols[i],borderWidth:0
+      }))
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:300},
+      plugins:{legend:{labels:{color:'#B0B0B0',font:{size:10},boxWidth:12}},tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>(' '+c.dataset.label+': '+fmtK(c.raw))}}},
+      scales:{
+        x:{stacked:true,ticks:{color:'#B0B0B0',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{stacked:true,ticks:{color:'#B0B0B0',font:{size:9},callback:v=>fmtK(v)},grid:{color:'rgba(255,255,255,0.04)'}}
+      },
+      onClick:(e,els)=>{if(els.length){document.getElementById('f-bu').value=bus[els[0].datasetIndex];updateAll();}}
+    }
+  });
+}
+
+// ── Chart 3: Product Donut ──
+function updateProduct(d){
+  const prods=['Product A','Product B','Product C'];
+  const vals=prods.map(p=>sum(d.filter(r=>r.Product===p),'NetRev'));
+  const total=vals.reduce((a,b)=>a+b,0);
+  if(charts['c-product']) charts['c-product'].destroy();
+  const ctx=document.getElementById('c-product').getContext('2d');
+  charts['c-product']=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:prods,datasets:[{data:vals,backgroundColor:[C_PA+'BB',C_PB+'BB',C_PC+'BB'],borderColor:[C_PA,C_PB,C_PC],borderWidth:1}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:300},
+      plugins:{
+        legend:{labels:{color:'#B0B0B0',font:{size:10},boxWidth:12}},
+        tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>c.label+': '+fmtK(c.raw)+' ('+pct(c.raw/total*100)+')'}}
+      },
+      onClick:(e,els)=>{if(els.length){document.getElementById('f-product').value=prods[els[0].index];updateAll();}}
+    },
+    plugins:[{id:'ct',afterDraw(ch){
+      const{ctx:c,chartArea:{top,bottom,left,right}}=ch;
+      c.save();c.textAlign='center';c.textBaseline='middle';
+      c.fillStyle='#FFFFFF';c.font='bold 13px system-ui';
+      c.fillText(fmtK(total),(left+right)/2,(top+bottom)/2);c.restore();
+    }}]
+  });
+}
+
+// ── Chart 4: Segment H-bar ──
+function updateSegment(d){
+  const segs=['Enterprise','Mid-Market','SMB'],cols=[C_ENT,C_MM,C_SMB];
+  const sorted=segs.map((s,i)=>({s,v:sum(d.filter(r=>r.Segment===s),'NetRev'),c:cols[i]})).sort((a,b)=>b.v-a.v);
+  if(charts['c-segment']) charts['c-segment'].destroy();
+  const ctx=document.getElementById('c-segment').getContext('2d');
+  charts['c-segment']=new Chart(ctx,{
+    type:'bar',
+    data:{labels:sorted.map(x=>x.s),datasets:[{label:'Net Revenue',data:sorted.map(x=>x.v),backgroundColor:sorted.map(x=>x.c+'BB'),borderColor:sorted.map(x=>x.c),borderWidth:1}]},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:{duration:300},
+      plugins:{legend:{display:false},tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>fmtK(c.raw)}}},
+      scales:{
+        x:{ticks:{color:'#B0B0B0',font:{size:9},callback:v=>fmtK(v)},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#B0B0B0',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}
+      },
+      onClick:(e,els)=>{if(els.length){document.getElementById('f-segment').value=sorted[els[0].index].s;updateAll();}}
+    }
+  });
+}
+
+// ── Chart 5: RevType Pie ──
+function updateRevType(d){
+  const types=['New','Renewal','Expansion'],cols=[C_NEW,C_REN,C_EXP];
+  const vals=types.map(t=>sum(d.filter(r=>r.RevType===t),'NetRev'));
+  const total=vals.reduce((a,b)=>a+b,0);
+  if(charts['c-revtype']) charts['c-revtype'].destroy();
+  const ctx=document.getElementById('c-revtype').getContext('2d');
+  charts['c-revtype']=new Chart(ctx,{
+    type:'pie',
+    data:{labels:types,datasets:[{data:vals,backgroundColor:cols.map(c=>c+'BB'),borderColor:cols,borderWidth:1}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:300},
+      plugins:{legend:{labels:{color:'#B0B0B0',font:{size:10},boxWidth:12}},tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>c.label+': '+pct(c.raw/total*100)}}},
+      onClick:(e,els)=>{if(els.length){document.getElementById('f-revtype').value=types[els[0].index];updateAll();}}
+    }
+  });
+}
+
+// ── Chart 6: Discount ──
+function updateDiscount(d){
+  const bus=['North America','Europe','APAC'];
+  const avgAll=avg(d,'Disc');
+  const buAvgs=bus.map(bu=>avg(d.filter(r=>r.BU===bu),'Disc'));
+  if(charts['c-disc']) charts['c-disc'].destroy();
+  const ctx=document.getElementById('c-disc').getContext('2d');
+  charts['c-disc']=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:bus,
+      datasets:[{
+        label:'Avg Discount %',
+        data:buAvgs,
+        backgroundColor:buAvgs.map(v=>v>avgAll?C_RED+'BB':C_GREEN+'BB'),
+        borderColor:buAvgs.map(v=>v>avgAll?C_RED:C_GREEN),
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:300},
+      plugins:{
+        legend:{display:false},
+        tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>pct(c.raw)+' (co. avg: '+pct(avgAll)+')'}}
+      },
+      scales:{
+        x:{ticks:{color:'#B0B0B0'},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#B0B0B0',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}}
+      }
+    }
+  });
+  // draw avg reference line
+  const orig=charts['c-disc'].options.animation;
+  charts['c-disc'].options.plugins.afterDraw=undefined;
+  const plugin={id:'avgLine',afterDraw(chart){
+    const{ctx:c,scales:{y},chartArea:{left,right}}=chart;
+    const yPos=y.getPixelForValue(avgAll);
+    c.save();c.beginPath();c.moveTo(left,yPos);c.lineTo(right,yPos);
+    c.strokeStyle=C_RED;c.lineWidth=1.5;c.setLineDash([6,3]);c.stroke();
+    c.setLineDash([]);c.fillStyle=C_RED;c.font='10px system-ui';
+    c.fillText('Avg: '+pct(avgAll),right-60,yPos-5);c.restore();
+  }};
+  Chart.register(plugin);
+  charts['c-disc'].update();
+  Chart.unregister(plugin);
+  charts['c-disc'].options._avgPlugin=plugin;
+  charts['c-disc'].update=((orig)=>function(){orig.call(this);plugin.afterDraw(this);})(charts['c-disc'].update);
+}
+
+// ── Chart 7: Scatter ──
+function updateScatter(d){
+  const prods=['Product A','Product B','Product C'],cols=[C_PA,C_PB,C_PC];
+  if(charts['c-scatter']) charts['c-scatter'].destroy();
+  const ctx=document.getElementById('c-scatter').getContext('2d');
+  charts['c-scatter']=new Chart(ctx,{
+    type:'scatter',
+    data:{datasets:prods.map((p,i)=>({
+      label:p,
+      data:d.filter(r=>r.Product===p).map(r=>({x:r.PPU,y:r.Units,nr:r.NetRev,bu:r.BU,seg:r.Segment,mo:r.Month})),
+      backgroundColor:cols[i]+'88',borderColor:cols[i],pointRadius:5
+    }))},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:300},
+      plugins:{
+        legend:{labels:{color:'#B0B0B0',font:{size:10},boxWidth:12}},
+        tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>[c.dataset.label,'BU: '+c.raw.bu,'Seg: '+c.raw.seg,'Month: '+c.raw.mo,'Price: $'+c.raw.x,'Units: '+c.raw.y,'Net Rev: '+fmtK(c.raw.nr)]}}
+      },
+      scales:{
+        x:{title:{display:true,text:'Price per Unit ($)',color:'#888'},ticks:{color:'#B0B0B0'},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{title:{display:true,text:'Units Sold',color:'#888'},ticks:{color:'#B0B0B0'},grid:{color:'rgba(255,255,255,0.04)'}}
+      }
+    }
+  });
+}
+
+// ── Chart 8: ARR ──
+function updateARR(d,months){
+  const byM=groupBy(d,'Month');
+  const arrV=months.map(m=>byM[m]?sum(byM[m],'ARR'):0);
+  const mrr12=months.map(m=>byM[m]?sum(byM[m],'MRR')*12:0);
+  if(charts['c-arr']) charts['c-arr'].destroy();
+  const ctx=document.getElementById('c-arr').getContext('2d');
+  const grad=ctx.createLinearGradient(0,0,0,240);
+  grad.addColorStop(0,'rgba(29,158,117,0.3)');
+  grad.addColorStop(1,'rgba(29,158,117,0)');
+  charts['c-arr']=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:months.map(m=>m.replace('20','')),
+      datasets:[
+        {label:'ARR',data:arrV,borderColor:C_GREEN,backgroundColor:grad,fill:true,tension:0.4,pointRadius:2},
+        {label:'MRR×12',data:mrr12,borderColor:C_GREY,borderDash:[5,3],fill:false,tension:0.4,pointRadius:0,borderWidth:1.5}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:300},
+      plugins:{legend:{labels:{color:'#B0B0B0',font:{size:10},boxWidth:12}},tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>c.dataset.label+': '+fmtK(c.raw)}}},
+      scales:{
+        x:{ticks:{color:'#B0B0B0',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#B0B0B0',font:{size:9},callback:v=>fmtK(v)},grid:{color:'rgba(255,255,255,0.04)'}}
+      }
+    }
+  });
+}
+
+// ── Chart 9: Deferred ──
+function updateDeferred(d,months){
+  const byM=groupBy(d,'Month');
+  const vals=months.map(m=>byM[m]?sum(byM[m],'DeferredChg'):0);
+  if(charts['c-deferred']) charts['c-deferred'].destroy();
+  const ctx=document.getElementById('c-deferred').getContext('2d');
+  charts['c-deferred']=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:months.map(m=>m.replace('20','')),
+      datasets:[{
+        label:'Deferred Rev Change',
+        data:vals,
+        backgroundColor:vals.map(v=>v>=0?C_GREEN+'BB':C_RED+'BB'),
+        borderColor:vals.map(v=>v>=0?C_GREEN:C_RED),
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:300},
+      plugins:{legend:{display:false},tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>(c.raw>=0?'Building: ':'Burning: ')+fmtK(Math.abs(c.raw))}}},
+      scales:{
+        x:{ticks:{color:'#B0B0B0',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#B0B0B0',font:{size:9},callback:v=>fmtK(v)},grid:{color:'rgba(255,255,255,0.04)'}}
+      }
+    }
+  });
+}
+
+// ── Heatmap ──
+function updateHeatmap(d){
+  const segs=['Enterprise','Mid-Market','SMB'],prods=['Product A','Product B','Product C'];
+  const vals=segs.map(s=>prods.map(p=>sum(d.filter(r=>r.Segment===s&&r.Product===p),'NetRev')));
+  const maxV=Math.max(...vals.flat(),1);
+  const toCol=v=>{
+    const r=v/maxV;
+    // interpolate from #1A1A1A to Kangaroo red #E8281E
+    const red=Math.round(26+r*(232-26));
+    const g  =Math.round(26+r*(40-26));
+    const b  =Math.round(26+r*(30-26));
+    return `rgb(${red},${g},${b})`;
+  };
+  let html=`<table class="heatmap-table"><thead><tr><th></th>${prods.map(p=>`<th>${p}</th>`).join('')}</tr></thead><tbody>`;
+  segs.forEach((s,si)=>{
+    html+=`<tr><th style="text-align:left;color:#B0B0B0;padding:6px 10px">${s}</th>`;
+    prods.forEach((_,pi)=>{
+      const v=vals[si][pi];
+      const ratio=v/maxV;
+      const txtCol=ratio>0.45?'#FFFFFF':'#E6EDF3';
+      html+=`<td style="background:${toCol(v)};color:${txtCol}" title="${s} × ${prods[pi]}: ${fmt(v)}">${fmtK(v)}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById('heatmap-wrap').innerHTML=html;
+}
+
+// ── League Table ──
+function updateLeague(d){
+  const combos={};
+  d.forEach(r=>{
+    const k=`${r.Month} · ${r.BU} · ${r.Product}`;
+    combos[k]=(combos[k]||0)+r.NetRev;
+  });
+  const sorted=Object.entries(combos).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxV=sorted[0]?sorted[0][1]:1;
+  let html='';
+  sorted.forEach(([label,val],i)=>{
+    html+=`<div class="league-row">
+      <div class="league-rank">${i+1}</div>
+      <div class="league-label">${label}</div>
+      <div class="league-bar-wrap"><div class="league-bar" style="width:${Math.round(val/maxV*100)}%"></div></div>
+      <div class="league-val">${fmtK(val)}</div>
+    </div>`;
+  });
+  document.getElementById('league-wrap').innerHTML=html;
+}
+
+// ── Insights ──
+function updateInsights(d,months){
+  const bus=['North America','Europe','APAC'];
+  const buTot=bus.map(bu=>({bu,v:sum(d.filter(r=>r.BU===bu),'NetRev')})).sort((a,b)=>b.v-a.v);
+  const top=buTot[0]||{bu:'—',v:0};
+  document.getElementById('ins-top-bu').innerHTML=`<span class="hi">${top.bu}</span> leads with <span class="hi">${fmtK(top.v)}</span> this period.`;
+
+  const buDisc=bus.map(bu=>({bu,v:avg(d.filter(r=>r.BU===bu),'Disc'),rev:sum(d.filter(r=>r.BU===bu),'NetRev')})).sort((a,b)=>b.v-a.v);
+  const td=buDisc[0]||{bu:'—',v:0,rev:0};
+  document.getElementById('ins-disc').innerHTML=`<span class="warn">${td.bu}</span> avg <span class="warn">${pct(td.v)}</span> — <span class="warn">${fmtK(td.rev*(td.v/100))}</span> margin at risk.`;
+
+  const tot=sum(d,'NetRev');
+  const renPct=tot>0?sum(d.filter(r=>r.RevType==='Renewal'),'NetRev')/tot*100:0;
+  const hlth=renPct>=40?'<span class="hi">healthy ✓</span>':'<span class="warn">at risk ⚠</span>';
+  document.getElementById('ins-renewal').innerHTML=`Renewal = <span class="hi">${pct(renPct)}</span> of total. ${hlth} retention signal.`;
+
+  const segs=['Enterprise','Mid-Market','SMB'];
+  const segA=segs.map(s=>{const sd=d.filter(r=>r.Segment===s);return{s,avg:sd.length?sum(sd,'NetRev')/sd.length:0};}).sort((a,b)=>b.avg-a.avg);
+  const overallAvg=d.length?tot/d.length:0;
+  const fs=segA[0]||{s:'—',avg:0};
+  const vsAvg=overallAvg>0?(fs.avg-overallAvg)/overallAvg*100:0;
+  document.getElementById('ins-seg').innerHTML=`<span class="hi">${fs.s}</span> leads avg deal — <span class="hi">${pct(Math.abs(vsAvg))}</span> ${vsAvg>=0?'above':'below'} avg.`;
+
+  const last3=months.slice(-3);
+  const byM=groupBy(d,'Month');
+  const arrL=last3.map(m=>byM[m]?sum(byM[m],'ARR'):0);
+  const trend=arrL.length>=2?arrL[arrL.length-1]-arrL[0]:0;
+  const dir=trend>0?'<span class="hi">↑ Trending up</span>':trend<0?'<span class="warn">↓ Declining</span>':'<span style="color:#888">→ Flat</span>';
+  document.getElementById('ins-arr').innerHTML=`${dir} over last ${last3.length} months. Latest: <span class="hi">${fmtK(arrL[arrL.length-1]||0)}</span>.`;
+}
+
+// ── Bind filters ──
+['f-from','f-to','f-bu','f-product','f-segment','f-revtype'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',updateAll);
+});
+updateAll();
+</script>
+</body>
+</html>
