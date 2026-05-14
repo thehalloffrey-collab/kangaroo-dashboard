@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kangaroo Revenue Command Centre · LinkedIn Carousel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#020608;font-family:'Inter',sans-serif;padding:32px 20px}
+
+/* ── CONTROLS ── */
+.controls{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+.controls button{background:#D4780A;color:#060B12;border:none;padding:9px 22px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;letter-spacing:.02em;transition:.15s}
+.controls button:hover{background:#F2A35C}
+.controls button.sec{background:transparent;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.4);font-weight:500}
+.controls button.sec:hover{border-color:rgba(255,255,255,0.3);color:#fff}
+.slide-counter{color:rgba(255,255,255,0.25);font-size:12px;font-family:'JetBrains Mono',monospace;min-width:60px;text-align:center}
+.dots{display:flex;gap:5px;align-items:center}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.12);transition:.2s;cursor:pointer}
+.dot.active{background:#D4780A;transform:scale(1.4)}
+.print-note{text-align:center;color:rgba(255,255,255,0.2);font-size:11px;margin-bottom:16px;font-family:'JetBrains Mono',monospace}
+.stage{display:flex;justify-content:center}
+
+/* ── SLIDE BASE ── */
+.slide{
+  width:1080px;height:1350px;
+  position:relative;overflow:hidden;
+  background:#060B12;
+  display:none;flex-direction:column;
+}
+.slide.active{display:flex}
+
+/* ── SHARED ── */
+.s-bar{position:absolute;left:0;top:0;bottom:0;width:5px;background:#D4780A}
+.s-top{display:flex;justify-content:space-between;align-items:center;padding:44px 72px 0}
+.s-brand{display:flex;align-items:center;gap:10px}
+.s-kangaroo{font-size:22px}
+.s-logo{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#D4780A;letter-spacing:.12em;text-transform:uppercase}
+.s-pg{font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(255,255,255,0.15)}
+.s-rule{height:1px;background:linear-gradient(90deg,#D4780A 0%,rgba(212,120,10,0.2) 50%,transparent 100%);margin:20px 72px 0}
+.s-tag{display:inline-block;background:rgba(212,120,10,0.1);border:1px solid rgba(212,120,10,0.3);color:#D4780A;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;padding:4px 12px;border-radius:4px;text-transform:uppercase;letter-spacing:.1em}
+.s-footer{display:flex;justify-content:space-between;align-items:center;padding:0 72px 40px;margin-top:auto}
+.s-footer-l{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:rgba(255,255,255,0.12);letter-spacing:.06em;text-transform:uppercase}
+.s-footer-r{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,0.15)}
+
+/* ── SLIDE 1: COVER ── */
+.s1-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 72px;position:relative;z-index:1}
+.s1-eyebrow{font-family:'JetBrains Mono',monospace;font-size:13px;color:#D4780A;letter-spacing:.15em;text-transform:uppercase;margin-bottom:36px}
+.s1-headline{font-family:'Space Grotesk',sans-serif;font-size:96px;font-weight:700;color:#F8FAFC;line-height:.88;letter-spacing:-3px;margin-bottom:44px}
+.s1-headline em{color:#D4780A;font-style:normal}
+.s1-sub{font-size:20px;color:rgba(248,250,252,0.4);line-height:1.55;max-width:640px;margin-bottom:64px;font-weight:400}
+.s1-stats{display:flex;gap:56px}
+.s1-stat-num{font-family:'Space Grotesk',sans-serif;font-size:44px;font-weight:700;color:#F8FAFC;line-height:1}
+.s1-stat-num em{color:#D4780A;font-style:normal}
+.s1-stat-lbl{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(248,250,252,0.3);margin-top:8px;letter-spacing:.04em}
+.s1-glow{position:absolute;right:-120px;top:40%;transform:translateY(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(212,120,10,0.08) 0%,transparent 65%);pointer-events:none}
+.s1-accent-r{position:absolute;right:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,transparent 0%,#D4780A 30%,#F2A35C 70%,transparent 100%)}
+
+/* ── SLIDE 2: EXECUTIVE SUMMARY ── */
+.s2-body{flex:1;padding:32px 72px;display:flex;flex-direction:column;position:relative;z-index:1}
+.s2-headline{font-family:'Space Grotesk',sans-serif;font-size:52px;font-weight:700;color:#F8FAFC;line-height:.95;letter-spacing:-1.5px;margin:16px 0 32px}
+.s2-headline em{color:#D4780A;font-style:normal}
+.s2-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1}
+.s2-kpi{background:#0C1520;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:28px 32px;position:relative;overflow:hidden}
+.s2-kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.s2-kpi.orange::before{background:#D4780A}
+.s2-kpi.teal::before{background:#14BBA6}
+.s2-kpi.coral::before{background:#FF5A5F}
+.s2-kpi.grey::before{background:rgba(255,255,255,0.08)}
+.s2-kpi-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(248,250,252,0.3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px}
+.s2-kpi-val{font-family:'Space Grotesk',sans-serif;font-size:48px;font-weight:700;color:#F8FAFC;line-height:1}
+.s2-kpi-val.orange{color:#D4780A}
+.s2-kpi-val.teal{color:#14BBA6}
+.s2-kpi-val.coral{color:#FF5A5F}
+.s2-kpi-delta{font-family:'JetBrains Mono',monospace;font-size:13px;margin-top:12px;font-weight:500}
+.s2-kpi-delta.up{color:#14BBA6}
+.s2-kpi-delta.warn{color:#FF5A5F}
+.s2-kpi-delta.flat{color:#D4780A}
+.s2-kpi-note{font-size:13px;color:rgba(248,250,252,0.25);margin-top:6px;line-height:1.4}
+
+/* ── SLIDE 3: TREND ── */
+.s3-body{flex:1;padding:28px 72px 0;display:flex;flex-direction:column;position:relative;z-index:1}
+.s3-headline{font-family:'Space Grotesk',sans-serif;font-size:44px;font-weight:700;color:#F8FAFC;line-height:1.0;letter-spacing:-1px;margin:16px 0 8px}
+.s3-headline em{color:#D4780A;font-style:normal}
+.s3-sub{font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(248,250,252,0.3);margin-bottom:20px}
+.s3-chart{flex:1;position:relative;min-height:0}
+.s3-callouts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+.s3-callout{background:#0C1520;border-radius:10px;padding:18px 22px;border:1px solid rgba(255,255,255,0.05)}
+.s3-callout.best{border-color:rgba(20,187,166,0.25)}
+.s3-callout.worst{border-color:rgba(255,90,95,0.2)}
+.s3-c-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(248,250,252,0.3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.s3-c-val{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700}
+.s3-c-val.best{color:#14BBA6}
+.s3-c-val.worst{color:#FF5A5F}
+.s3-c-month{font-size:13px;color:rgba(248,250,252,0.35);margin-top:4px;font-family:'JetBrains Mono',monospace}
+
+/* ── SLIDE 4: BU DONUT ── */
+.s4-body{flex:1;padding:28px 72px 0;display:flex;flex-direction:column;position:relative;z-index:1}
+.s4-headline{font-family:'Space Grotesk',sans-serif;font-size:44px;font-weight:700;color:#F8FAFC;line-height:1.0;letter-spacing:-1px;margin:16px 0 24px}
+.s4-headline em{color:#D4780A;font-style:normal}
+.s4-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:40px;flex:1;align-items:center}
+.s4-donut{position:relative;height:480px}
+.s4-donut-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.s4-donut-val{font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:#F8FAFC}
+.s4-donut-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(248,250,252,0.3);margin-top:4px;text-transform:uppercase;letter-spacing:.08em}
+.s4-legend{display:flex;flex-direction:column;gap:20px}
+.s4-leg-item{display:flex;flex-direction:column;gap:8px}
+.s4-leg-top{display:flex;align-items:center;gap:12px}
+.s4-leg-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.s4-leg-name{font-size:16px;font-weight:600;color:#F8FAFC;font-family:'Space Grotesk',sans-serif}
+.s4-leg-val{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700}
+.s4-leg-bar-bg{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+.s4-leg-bar-fill{height:100%;border-radius:3px}
+.s4-leg-meta{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(248,250,252,0.3)}
+
+/* ── SLIDE 5: DISCOUNT ── */
+.s5-body{flex:1;padding:28px 72px 0;display:flex;flex-direction:column;position:relative;z-index:1}
+.s5-headline{font-family:'Space Grotesk',sans-serif;font-size:44px;font-weight:700;color:#F8FAFC;line-height:1.0;letter-spacing:-1px;margin:16px 0 8px}
+.s5-headline em{color:#FF5A5F;font-style:normal}
+.s5-sub{font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(248,250,252,0.3);margin-bottom:16px}
+.s5-chart{flex:1;position:relative;min-height:0;max-height:420px}
+.s5-table{width:100%;border-collapse:separate;border-spacing:0 8px;margin-top:16px}
+.s5-table th{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(248,250,252,0.25);text-transform:uppercase;letter-spacing:.08em;padding:0 16px 6px;text-align:left}
+.s5-table td{padding:16px;background:#0C1520;border:1px solid rgba(255,255,255,0.04);font-size:14px}
+.s5-table td:first-child{border-radius:8px 0 0 8px;font-weight:600;color:#F8FAFC;font-family:'Space Grotesk',sans-serif}
+.s5-table td:last-child{border-radius:0 8px 8px 0;font-family:'JetBrains Mono',monospace}
+.s5-flag{display:inline-block;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.06em}
+.s5-flag.high{background:rgba(255,90,95,0.12);color:#FF5A5F;border:1px solid rgba(255,90,95,0.25)}
+.s5-flag.ok{background:rgba(20,187,166,0.1);color:#14BBA6;border:1px solid rgba(20,187,166,0.2)}
+.s5-warning{display:flex;gap:12px;align-items:flex-start;background:rgba(255,90,95,0.06);border:1px solid rgba(255,90,95,0.2);border-radius:10px;padding:16px 20px;margin-top:14px}
+.s5-warning-icon{color:#FF5A5F;font-size:16px;flex-shrink:0;margin-top:1px}
+.s5-warning-text{font-size:14px;color:rgba(248,250,252,0.55);line-height:1.5}
+.s5-warning-text strong{color:#FF5A5F}
+
+/* ── SLIDE 6: KEY TAKEAWAY ── */
+.s6-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 72px;position:relative;z-index:1}
+.s6-quote-mark{font-family:'Space Grotesk',sans-serif;font-size:120px;font-weight:700;color:#D4780A;line-height:.7;margin-bottom:32px;opacity:.6}
+.s6-quote{font-family:'Space Grotesk',sans-serif;font-size:52px;font-weight:700;color:#F8FAFC;line-height:1.05;letter-spacing:-1.5px;margin-bottom:48px}
+.s6-quote em{color:#D4780A;font-style:normal}
+.s6-tagline{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:#D4780A;letter-spacing:.04em;margin-bottom:48px}
+.s6-items{display:flex;flex-direction:column;gap:14px}
+.s6-item{display:flex;align-items:center;gap:16px}
+.s6-dot{width:6px;height:6px;border-radius:50%;background:#D4780A;flex-shrink:0}
+.s6-item-text{font-size:18px;color:rgba(248,250,252,0.5);font-weight:400}
+.s6-glow-l{position:absolute;left:-100px;bottom:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(212,120,10,0.07) 0%,transparent 65%);pointer-events:none}
+
+/* ── SLIDE 7: AUDIENCE LENS ── */
+.s7-body{flex:1;padding:28px 72px 0;display:flex;flex-direction:column;position:relative;z-index:1}
+.s7-headline{font-family:'Space Grotesk',sans-serif;font-size:44px;font-weight:700;color:#F8FAFC;line-height:1.0;letter-spacing:-1px;margin:16px 0 28px}
+.s7-headline em{color:#D4780A;font-style:normal}
+.s7-grid{display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center}
+.s7-row{display:grid;grid-template-columns:160px 1fr 1fr;gap:0;background:#0C1520;border:1px solid rgba(255,255,255,0.05);border-radius:10px;overflow:hidden}
+.s7-row.hl{border-color:rgba(212,120,10,0.2)}
+.s7-role{display:flex;align-items:center;gap:12px;padding:20px 20px;border-right:1px solid rgba(255,255,255,0.05)}
+.s7-role-icon{font-size:20px}
+.s7-role-name{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#F8FAFC}
+.s7-question{padding:20px;border-right:1px solid rgba(255,255,255,0.05);font-size:13px;color:rgba(248,250,252,0.4);line-height:1.45;display:flex;align-items:center}
+.s7-kpis{padding:20px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#D4780A;line-height:1.8;display:flex;align-items:center}
+
+/* ── SLIDE 8: CTA ── */
+.s8-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 72px;position:relative;z-index:1}
+.s8-eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;color:#D4780A;letter-spacing:.2em;text-transform:uppercase;margin-bottom:32px}
+.s8-headline{font-family:'Space Grotesk',sans-serif;font-size:76px;font-weight:700;color:#F8FAFC;line-height:.9;letter-spacing:-2.5px;margin-bottom:20px}
+.s8-headline em{color:#D4780A;font-style:normal}
+.s8-sub{font-size:18px;color:rgba(248,250,252,0.35);margin-bottom:52px;max-width:600px;line-height:1.55}
+.s8-links{display:flex;flex-direction:column;gap:12px;margin-bottom:52px}
+.s8-link-row{display:flex;align-items:center;gap:16px;padding:18px 24px;background:#0C1520;border:1px solid rgba(255,255,255,0.05);border-radius:10px}
+.s8-link-row.hl{border-color:rgba(212,120,10,0.25);background:rgba(212,120,10,0.05)}
+.s8-link-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0}
+.s8-link-text{font-size:16px;color:rgba(248,250,252,0.6);flex:1}
+.s8-link-url{font-family:'JetBrains Mono',monospace;font-size:13px;color:#D4780A}
+.s8-sign{border-top:1px solid rgba(255,255,255,0.06);padding-top:28px}
+.s8-sign-name{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#F8FAFC}
+.s8-sign-title{font-size:14px;color:rgba(248,250,252,0.35);margin-top:6px;line-height:1.6}
+.s8-glow{position:absolute;right:-80px;top:30%;width:500px;height:500px;background:radial-gradient(circle,rgba(20,187,166,0.07) 0%,transparent 65%);pointer-events:none}
+
+@media print{
+  body{background:#060B12;padding:0}
+  .controls,.print-note{display:none}
+  .stage{display:block}
+  .slide{display:flex!important;page-break-after:always;break-after:page}
+}
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <button class="sec" onclick="prev()">← Prev</button>
+  <div class="dots" id="dots"></div>
+  <button class="sec" onclick="next()">Next →</button>
+  <span class="slide-counter" id="counter">1 / 8</span>
+  <button onclick="window.print()">Print to PDF ↓</button>
+</div>
+<p class="print-note">Print to PDF → save → upload to LinkedIn as Document post · Use keyboard arrows to navigate</p>
+
+<div class="stage">
+
+<!-- ════════════════════════════════
+     SLIDE 1 · COVER
+════════════════════════════════ -->
+<div class="slide active" id="s1">
+  <div class="s-bar"></div>
+  <div class="s1-accent-r"></div>
+  <div class="s-top">
+    <div class="s-brand">
+      <span class="s-kangaroo">🦘</span>
+      <span class="s-logo">KANGAROO</span>
+    </div>
+    <div class="s-pg">01 / 08</div>
+  </div>
+  <div class="s-rule"></div>
+  <div class="s1-body">
+    <div class="s1-glow"></div>
+    <div class="s1-eyebrow">Revenue Intelligence · 2024–2025</div>
+    <div class="s1-headline">Where every<br><em>dollar</em><br>tells a story.</div>
+    <div class="s1-sub">24 months · 3 regions · 3 products · $22.6M net revenue.<br>Here's what the numbers revealed.</div>
+    <div class="s1-stats">
+      <div>
+        <div class="s1-stat-num"><em>$22.6M</em></div>
+        <div class="s1-stat-lbl">Net revenue</div>
+      </div>
+      <div>
+        <div class="s1-stat-num">216</div>
+        <div class="s1-stat-lbl">Data combinations</div>
+      </div>
+      <div>
+        <div class="s1-stat-num">11.6%</div>
+        <div class="s1-stat-lbl">Avg discount rate</div>
+      </div>
+      <div>
+        <div class="s1-stat-num">$271M</div>
+        <div class="s1-stat-lbl">Total ARR</div>
+      </div>
+    </div>
+  </div>
+  <div class="s-footer">
+    <div class="s-footer-l">Julaluk Clements · CPA (ASA)</div>
+    <div class="s-footer-r">Swipe to explore →</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 2 · EXECUTIVE SUMMARY
+════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="s-bar"></div>
+  <div class="s-top">
+    <div class="s-brand"><span class="s-kangaroo">🦘</span><span class="s-logo">KANGAROO</span></div>
+    <div class="s-pg">02 / 08</div>
+  </div>
+  <div class="s-rule"></div>
+  <div class="s2-body">
+    <div class="s-tag" style="margin-top:20px">Executive Summary</div>
+    <div class="s2-headline">The numbers<br>that <em>matter.</em></div>
+    <div class="s2-grid">
+      <div class="s2-kpi orange">
+        <div class="s2-kpi-label">Net Revenue</div>
+        <div class="s2-kpi-val orange">$22.60M</div>
+        <div class="s2-kpi-delta up">↑ Primary top-line · All BUs</div>
+        <div class="s2-kpi-note">After discounts · Jan 2024–Dec 2025</div>
+      </div>
+      <div class="s2-kpi grey">
+        <div class="s2-kpi-label">Gross Revenue</div>
+        <div class="s2-kpi-val">$25.78M</div>
+        <div class="s2-kpi-delta flat">$3.18M discount leakage</div>
+        <div class="s2-kpi-note">Pre-discount baseline across 216 rows</div>
+      </div>
+      <div class="s2-kpi teal">
+        <div class="s2-kpi-label">Total ARR</div>
+        <div class="s2-kpi-val teal">$271M</div>
+        <div class="s2-kpi-delta up">↑ Strong recurring base</div>
+        <div class="s2-kpi-note">Annualised recurring revenue · Board metric</div>
+      </div>
+      <div class="s2-kpi coral">
+        <div class="s2-kpi-label">Avg Discount %</div>
+        <div class="s2-kpi-val coral">11.6%</div>
+        <div class="s2-kpi-delta warn">⚠ Enterprise at 12.05% — above threshold</div>
+        <div class="s2-kpi-note">Blended rate · threshold: 12%</div>
+      </div>
+      <div class="s2-kpi teal">
+        <div class="s2-kpi-label">Deferred Revenue Δ</div>
+        <div class="s2-kpi-val teal">$632K</div>
+        <div class="s2-kpi-delta up">↑ Revenue quality intact</div>
+        <div class="s2-kpi-note">Positive deferred — billings ahead of recognition</div>
+      </div>
+      <div class="s2-kpi grey">
+        <div class="s2-kpi-label">Recognized Revenue</div>
+        <div class="s2-kpi-val">$23.23M</div>
+        <div class="s2-kpi-delta up">AASB 15 compliant</div>
+        <div class="s2-kpi-note">Net Rev + Deferred Δ · P&L line</div>
+      </div>
+    </div>
+  </div>
+  <div class="s-footer">
+    <div class="s-footer-l">julalukclements.com</div>
+    <div class="s-footer-r">Jan 2024 – Dec 2025</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 3 · NET REVENUE TREND
+════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="s-bar"></div>
+  <div class="s-top">
+    <div class="s-brand"><span class="s-kangaroo">🦘</span><span class="s-logo">KANGAROO</span></div>
+    <div class="s-pg">03 / 08</div>
+  </div>
+  <div class="s-rule"></div>
+  <div class="s3-body">
+    <div class="s-tag" style="margin-top:20px">Net Revenue Trend</div>
+    <div class="s3-headline">Is the business <em>accelerating</em><br>or losing steam?</div>
+    <div class="s3-sub">Monthly net revenue · Jan 2024 – Dec 2025 · 3-month rolling average</div>
+    <div class="s3-chart"><canvas id="trendChart"></canvas></div>
+    <div class="s3-callouts">
+      <div class="s3-callout best">
+        <div class="s3-c-label">↑ Best month</div>
+        <div class="s3-c-val best">$1.14M</div>
+        <div class="s3-c-month">Dec 2025</div>
+      </div>
+      <div class="s3-callout worst">
+        <div class="s3-c-label">↓ Lowest month</div>
+        <div class="s3-c-val worst">$471K</div>
+        <div class="s3-c-month">Feb 2024</div>
+      </div>
+    </div>
+  </div>
+  <div class="s-footer">
+    <div class="s-footer-l">Julaluk Clements · CPA (ASA)</div>
+    <div class="s-footer-r">24-month view · All BUs combined</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 4 · REVENUE BY BU
+════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="s-bar"></div>
+  <div class="s-top">
+    <div class="s-brand"><span class="s-kangaroo">🦘</span><span class="s-logo">KANGAROO</span></div>
+    <div class="s-pg">04 / 08</div>
+  </div>
+  <div class="s-rule"></div>
+  <div class="s4-body">
+    <div class="s-tag" style="margin-top:20px">Revenue by Business Unit</div>
+    <div class="s4-headline">Where is our revenue<br><em>coming from?</em></div>
+    <div class="s4-layout">
+      <div class="s4-donut">
+        <canvas id="buChart"></canvas>
+        <div class="s4-donut-label">
+          <div class="s4-donut-val">$22.6M</div>
+          <div class="s4-donut-sub">Net Revenue</div>
+        </div>
+      </div>
+      <div class="s4-legend">
+        <div class="s4-leg-item">
+          <div class="s4-leg-top">
+            <div class="s4-leg-dot" style="background:#D4780A"></div>
+            <div class="s4-leg-name">North America</div>
+          </div>
+          <div class="s4-leg-val" style="color:#D4780A">$7.90M</div>
+          <div class="s4-leg-bar-bg"><div class="s4-leg-bar-fill" style="width:100%;background:#D4780A"></div></div>
+          <div class="s4-leg-meta">35.0% of total · Leads Product B</div>
+        </div>
+        <div class="s4-leg-item">
+          <div class="s4-leg-top">
+            <div class="s4-leg-dot" style="background:#14BBA6"></div>
+            <div class="s4-leg-name">APAC</div>
+          </div>
+          <div class="s4-leg-val" style="color:#14BBA6">$7.65M</div>
+          <div class="s4-leg-bar-bg"><div class="s4-leg-bar-fill" style="width:96.9%;background:#14BBA6"></div></div>
+          <div class="s4-leg-meta">33.9% of total · Strong Product B</div>
+        </div>
+        <div class="s4-leg-item">
+          <div class="s4-leg-top">
+            <div class="s4-leg-dot" style="background:#94A3B8"></div>
+            <div class="s4-leg-name">Europe</div>
+          </div>
+          <div class="s4-leg-val" style="color:#94A3B8">$7.05M</div>
+          <div class="s4-leg-bar-bg"><div class="s4-leg-bar-fill" style="width:89.3%;background:#94A3B8"></div></div>
+          <div class="s4-leg-meta">31.2% of total · Growth opportunity</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="s-footer">
+    <div class="s-footer-l">julalukclements.com</div>
+    <div class="s-footer-r">Balanced spread — no single BU above 35%</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 5 · DISCOUNT RISK
+════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="s-bar"></div>
+  <div class="s-top">
+    <div class="s-brand"><span class="s-kangaroo">🦘</span><span class="s-logo">KANGAROO</span></div>
+    <div class="s-pg">05 / 08</div>
+  </div>
+  <div class="s-rule"></div>
+  <div class="s5-body">
+    <div class="s-tag" style="margin-top:20px">Discount Risk</div>
+    <div class="s5-headline">Are we discounting<br><em>too much?</em></div>
+    <div class="s5-sub">Average discount % by customer segment · Threshold: 12%</div>
+    <div class="s5-chart"><canvas id="discChart"></canvas></div>
+    <table class="s5-table">
+      <thead>
+        <tr>
+          <th>Segment</th>
+          <th>Avg Discount</th>
+          <th>Discount $</th>
+          <th>Gross Rev</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Enterprise</td>
+          <td style="color:#FF5A5F;font-family:'JetBrains Mono',monospace">12.05%</td>
+          <td style="font-family:'JetBrains Mono',monospace;color:rgba(248,250,252,0.7)">$1,178,523</td>
+          <td style="font-family:'JetBrains Mono',monospace;color:rgba(248,250,252,0.4)">$9.14M</td>
+          <td><span class="s5-flag high">HIGH</span></td>
+        </tr>
+        <tr>
+          <td>SMB</td>
+          <td style="color:#FF5A5F;font-family:'JetBrains Mono',monospace">11.98%</td>
+          <td style="font-family:'JetBrains Mono',monospace;color:rgba(248,250,252,0.7)">$1,024,133</td>
+          <td style="font-family:'JetBrains Mono',monospace;color:rgba(248,250,252,0.4)">$8.14M</td>
+          <td><span class="s5-flag high">HIGH</span></td>
+        </tr>
+        <tr>
+          <td>Mid-Market</td>
+          <td style="color:#14BBA6;font-family:'JetBrains Mono',monospace">10.94%</td>
+          <td style="font-family:'JetBrains Mono',monospace;color:rgba(248,250,252,0.7)">$974,298</td>
+          <td style="font-family:'JetBrains Mono',monospace;color:rgba(248,250,252,0.4)">$8.50M</td>
+          <td><span class="s5-flag ok">OK</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="s5-warning">
+      <div class="s5-warning-icon">⚠</div>
+      <div class="s5-warning-text">Enterprise and SMB both exceed the 12% discount threshold. Combined leakage: <strong>$2.20M</strong>. Pricing discipline review recommended before next quarter.</div>
+    </div>
+  </div>
+  <div class="s-footer">
+    <div class="s-footer-l">Julaluk Clements · CPA (ASA)</div>
+    <div class="s-footer-r">$3.18M total discount · FY2024–2025</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 6 · KEY TAKEAWAY
+════════════════════════════════ -->
+<div class="slide" id="s6">
+  <div class="s-bar"></div>
+  <div class="s-top">
+    <div class="s-brand"><span class="s-kangaroo">🦘</span><span class="s-logo">KANGAROO</span></div>
+    <div class="s-pg">06 / 08</div>
+  </div>
+  <div class="s-rule"></div>
+  <div class="s6-body">
+    <div class="s6-glow-l"></div>
+    <div class="s6-quote-mark">"</div>
+    <div class="s6-quote">Strong overall growth,<br>but discounting and<br>renewal mix <em>need<br>attention.</em></div>
+    <div class="s6-tagline">Focus. Fix. Grow.</div>
+    <div class="s6-items">
+      <div class="s6-item"><div class="s6-dot"></div><div class="s6-item-text">Expansion at 37.3% is your growth engine — protect it</div></div>
+      <div class="s6-item"><div class="s6-dot"></div><div class="s6-item-text">Renewal mix at 30.6% is below the 35% healthy benchmark</div></div>
+      <div class="s6-item"><div class="s6-dot"></div><div class="s6-item-text">Enterprise discounting above threshold — $1.18M leakage</div></div>
+      <div class="s6-item"><div class="s6-dot"></div><div class="s6-item-text">Deferred revenue positive — revenue quality intact</div></div>
+    </div>
+  </div>
+  <div class="s-footer">
+    <div class="s-footer-l">julalukclements.com</div>
+    <div class="s-footer-r">Audience: CFO / Board / FP&A Lead</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 7 · AUDIENCE LENS
+════════════════════════════════ -->
+<div class="slide" id="s7">
+  <div class="s-bar"></div>
+  <div class="s-top">
+    <div class="s-brand"><span class="s-kangaroo">🦘</span><span class="s-logo">KANGAROO</span></div>
+    <div class="s-pg">07 / 08</div>
+  </div>
+  <div class="s-rule"></div>
+  <div class="s7-body">
+    <div class="s-tag" style="margin-top:20px">Audience Lens</div>
+    <div class="s7-headline">Same data.<br><em>Different decisions.</em></div>
+    <div class="s7-grid">
+      <div class="s7-row hl">
+        <div class="s7-role"><span class="s7-role-icon">👔</span><span class="s7-role-name">CEO</span></div>
+        <div class="s7-question">Are we growing? Are we at risk?</div>
+        <div class="s7-kpis">Net Revenue · ARR · Top BU</div>
+      </div>
+      <div class="s7-row">
+        <div class="s7-role"><span class="s7-role-icon">📊</span><span class="s7-role-name">CFO</span></div>
+        <div class="s7-question">Is revenue quality intact? Where is margin risk?</div>
+        <div class="s7-kpis">Discount % · Deferred Δ · Recognized</div>
+      </div>
+      <div class="s7-row">
+        <div class="s7-role"><span class="s7-role-icon">🧮</span><span class="s7-role-name">FP&A</span></div>
+        <div class="s7-question">What drives the numbers? Where do I reforecast?</div>
+        <div class="s7-kpis">All KPIs · MoM Δ · BU × Product</div>
+      </div>
+      <div class="s7-row">
+        <div class="s7-role"><span class="s7-role-icon">🎯</span><span class="s7-role-name">Sales</span></div>
+        <div class="s7-question">Which products and regions are winning?</div>
+        <div class="s7-kpis">New · Expansion · Discount by Seg</div>
+      </div>
+      <div class="s7-row">
+        <div class="s7-role"><span class="s7-role-icon">🏛</span><span class="s7-role-name">Board</span></div>
+        <div class="s7-question">Are we on track? What is the risk to forecast?</div>
+        <div class="s7-kpis">ARR · Net Rev vs prior · Risk flag</div>
+      </div>
+    </div>
+  </div>
+  <div class="s-footer">
+    <div class="s-footer-l">Julaluk Clements · CPA (ASA)</div>
+    <div class="s-footer-r">One dataset · Five lenses · Better decisions</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 8 · CTA
+════════════════════════════════ -->
+<div class="slide" id="s8">
+  <div class="s-bar"></div>
+  <div class="s-top">
+    <div class="s-brand"><span class="s-kangaroo">🦘</span><span class="s-logo">KANGAROO</span></div>
+    <div class="s-pg">08 / 08</div>
+  </div>
+  <div class="s-rule"></div>
+  <div class="s8-body">
+    <div class="s8-glow"></div>
+    <div class="s8-eyebrow">FP&A · AI Automation · Melbourne</div>
+    <div class="s8-headline">What does<br>your revenue<br><em>really</em> say?</div>
+    <div class="s8-sub">Built as a portfolio case study demonstrating audience-adaptive FP&A, derivation chain validation, and finance-led dashboard design.</div>
+    <div class="s8-links">
+      <div class="s8-link-row hl">
+        <div class="s8-link-icon">📊</div>
+        <div class="s8-link-text">Interactive dashboard · Full dataset · Excel workbook</div>
+        <div class="s8-link-url">julalukclements.com/kangaroo</div>
+      </div>
+      <div class="s8-link-row">
+        <div class="s8-link-icon">💼</div>
+        <div class="s8-link-text">FP&A advisory · AI automation · Platform implementation</div>
+        <div class="s8-link-url">julalukclements.com</div>
+      </div>
+      <div class="s8-link-row">
+        <div class="s8-link-icon">✉</div>
+        <div class="s8-link-text">Open to Melbourne finance roles · Full working rights</div>
+        <div class="s8-link-url">julaluk@julalukclements.com</div>
+      </div>
+    </div>
+    <div class="s8-sign">
+      <div class="s8-sign-name">Julaluk Clements</div>
+      <div class="s8-sign-title">Senior Financial Accountant · CPA (ASA) · Google AI Professional Certificate (distinctive)<br>15+ years global finance · Shell · MES Mitr · Hall of Frey Advisory · Melbourne, AU</div>
+    </div>
+  </div>
+  <div class="s-footer">
+    <div class="s-footer-l">🦘 KANGAROO RCC</div>
+    <div class="s-footer-r">Follow for finance + AI content</div>
+  </div>
+</div>
+
+</div><!-- /stage -->
+<script>
+// ── NAV ────────────────────────────────────────────────────────────────────
+const SLIDES=document.querySelectorAll('.slide');
+const N=SLIDES.length;
+let cur=0;
+const dotsEl=document.getElementById('dots');
+const dots=[];
+for(let i=0;i<N;i++){
+  const d=document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.onclick=()=>goTo(i);
+  dotsEl.appendChild(d);dots.push(d);
+}
+function goTo(i){
+  SLIDES[cur].classList.remove('active');dots[cur].classList.remove('active');
+  cur=Math.max(0,Math.min(N-1,i));
+  SLIDES[cur].classList.add('active');dots[cur].classList.add('active');
+  document.getElementById('counter').textContent=(cur+1)+' / '+N;
+  if(cur===2&&!trendBuilt)buildTrend();
+  if(cur===3&&!buBuilt)buildBU();
+  if(cur===4&&!discBuilt)buildDisc();
+}
+function next(){goTo(cur+1)}function prev(){goTo(cur-1)}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')next();if(e.key==='ArrowLeft')prev();});
+
+// ── CHART DEFAULTS ─────────────────────────────────────────────────────────
+const FONT_MONO="'JetBrains Mono',monospace";
+const FONT_HEAD="'Space Grotesk',sans-serif";
+const C={
+  bg:'#060B12',card:'#0C1520',
+  orange:'#D4780A',orangeLt:'#F2A35C',
+  teal:'#14BBA6',coral:'#FF5A5F',
+  white:'#F8FAFC',muted:'#94A3B8',
+  grid:'rgba(255,255,255,0.04)',
+};
+
+// ── TREND CHART ────────────────────────────────────────────────────────────
+let trendBuilt=false;
+function buildTrend(){
+  if(trendBuilt)return;trendBuilt=true;
+  const labels=["Jan'24","Feb'24","Mar'24","Apr'24","May'24","Jun'24","Jul'24","Aug'24","Sep'24","Oct'24","Nov'24","Dec'24","Jan'25","Feb'25","Mar'25","Apr'25","May'25","Jun'25","Jul'25","Aug'25","Sep'25","Oct'25","Nov'25","Dec'25"];
+  const vals=[653003,471543,606746,660578,701078,720463,782218,714756,789330,791003,869002,1104736,812982,879034,920673,1014098,1051874,975965,1120781,1073931,1079897,1001672,1069433,1136099];
+  const roll=vals.map((v,i,a)=>{const s=a.slice(Math.max(0,i-2),i+1);return Math.round(s.reduce((x,y)=>x+y,0)/s.length);});
+  const ctx=document.getElementById('trendChart').getContext('2d');
+  const grad=ctx.createLinearGradient(0,0,0,350);
+  grad.addColorStop(0,'rgba(212,120,10,0.22)');
+  grad.addColorStop(1,'rgba(212,120,10,0.01)');
+  // Best/worst annotations
+  const maxI=vals.indexOf(Math.max(...vals));
+  const minI=vals.indexOf(Math.min(...vals));
+  new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'Net Revenue',data:vals,borderColor:C.orange,backgroundColor:grad,fill:true,tension:0.4,pointRadius:vals.map((_,i)=>(i===maxI||i===minI)?5:0),pointBackgroundColor:vals.map((_,i)=>i===maxI?C.teal:C.coral),borderWidth:2.5},
+        {label:'3-Month Avg',data:roll,borderColor:C.teal,borderDash:[8,4],fill:false,tension:0.4,pointRadius:0,borderWidth:2}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'rgba(248,250,252,0.35)',font:{size:12,family:FONT_MONO},boxWidth:14,padding:20}},
+        tooltip:{backgroundColor:C.card,borderColor:'rgba(255,255,255,0.06)',borderWidth:1,titleColor:C.white,bodyColor:'rgba(248,250,252,0.55)',titleFont:{family:FONT_HEAD,size:13},bodyFont:{family:FONT_MONO,size:12},callbacks:{label:c=>' $'+(c.raw/1000).toFixed(0)+'K'}}
+      },
+      scales:{
+        x:{ticks:{color:'rgba(248,250,252,0.25)',font:{size:11,family:FONT_MONO},maxRotation:0},grid:{color:C.grid},border:{display:false}},
+        y:{ticks:{color:'rgba(248,250,252,0.25)',font:{size:11,family:FONT_MONO},callback:v=>'$'+(v/1000).toFixed(0)+'K'},grid:{color:C.grid},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ── BU DONUT ───────────────────────────────────────────────────────────────
+let buBuilt=false;
+function buildBU(){
+  if(buBuilt)return;buBuilt=true;
+  const ctx=document.getElementById('buChart').getContext('2d');
+  new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:['North America','APAC','Europe'],
+      datasets:[{
+        data:[7896688,7651525,7050423],
+        backgroundColor:[C.orange,C.teal,'#94A3B8'],
+        borderColor:C.bg,
+        borderWidth:6,
+        hoverBorderWidth:6,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      cutout:'66%',
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:C.card,borderColor:'rgba(255,255,255,0.06)',borderWidth:1,titleColor:C.white,bodyColor:'rgba(248,250,252,0.55)',titleFont:{family:FONT_HEAD},bodyFont:{family:FONT_MONO},callbacks:{label:c=>' $'+(c.raw/1e6).toFixed(2)+'M ('+((c.raw/22598636)*100).toFixed(1)+'%)'}}
+      }
+    }
+  });
+}
+
+// ── DISCOUNT CHART ─────────────────────────────────────────────────────────
+let discBuilt=false;
+function buildDisc(){
+  if(discBuilt)return;discBuilt=true;
+  const ctx=document.getElementById('discChart').getContext('2d');
+  new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['Enterprise','SMB','Mid-Market'],
+      datasets:[
+        {label:'Avg Discount %',data:[12.05,11.98,10.94],backgroundColor:['#FF5A5F','#FF5A5F','#14BBA6'],borderRadius:6,borderSkipped:false,maxBarThickness:80},
+        {label:'Threshold 12%',type:'line',data:[12,12,12],borderColor:C.orange,borderDash:[8,4],pointRadius:0,borderWidth:1.5,tension:0}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'rgba(248,250,252,0.3)',font:{size:12,family:FONT_MONO},boxWidth:12,padding:20}},
+        tooltip:{backgroundColor:C.card,borderColor:'rgba(255,255,255,0.06)',borderWidth:1,titleColor:C.white,bodyColor:'rgba(248,250,252,0.55)',titleFont:{family:FONT_HEAD},bodyFont:{family:FONT_MONO},callbacks:{label:c=>` ${c.raw.toFixed(2)}%`}}
+      },
+      scales:{
+        x:{ticks:{color:'rgba(248,250,252,0.35)',font:{size:13,family:FONT_MONO}},grid:{display:false},border:{display:false}},
+        y:{min:9,max:14,ticks:{color:'rgba(248,250,252,0.25)',font:{size:11,family:FONT_MONO},callback:v=>v+'%'},grid:{color:C.grid},border:{display:false}}
+      }
+    }
+  });
+}
+
+// Build trend on load if on slide 3
+setTimeout(()=>{if(cur===2)buildTrend();},100);
+</script>
+</body>
+</html>
